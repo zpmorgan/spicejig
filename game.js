@@ -1,15 +1,60 @@
 var game;
+var puzzle;
 var pointsArray = [];
 var pointColors = ["0x00ff00", "0x008800", "0x880000", "0xff0000"];
 var bezierGraphics;
 var movingSprite;
-
-var pieces = [];
-var pw = 4;
-var ph = 4;
-function pieceXY(x,y){
-  return pieces[y*pw + x];
+{
+  var pieces = [];
+  var pw = 4;
+  var ph = 4;
+  function pieceXY(x,y){
+    return pieces[y*pw + x];
+  }
 }
+
+var Puzzle = function(game, screamer, w,h, img){
+  this.game = game;
+  this.screamer = screamer;
+  this.ph = ph;
+  this.pw = pw;
+  this.iw = 300; //image size. as in, of all the pieces put together.
+  this.ih = 300;
+  //cw, ch: size of canvas in pixels.
+  //as in, the working area on which it's assembled by the player...
+  this.cw = 400;
+  this.ch = 400;
+  this.img = img;
+  this.pieces = [];
+
+  // nested class
+  // px, py are col, row of the jigsaw cut.
+  // cx,cy are positions on the canvas.
+  this.Piece = function(px,py){
+    this.px = px;
+    this.py = py;
+    this.cx = 0;
+    this.cy = 0;
+  };
+
+  this.setPiece = function(x,y, piece){
+    this.pieces[y*ph + x] = piece;
+  }
+
+  //initialize puzzle by generating pieces.
+  for (var x = 0; x < pw; x++){
+    for (var y = 0; y < ph; y++){
+      var piece = new this.Piece();
+      piece.cx = game.rnd.between(100, game.width-100);
+      piece.cy = game.rnd.between(100, game.height-100);
+      piece.sprite = this.game.add.sprite(piece.cx,piece.cy, screamer);
+      piece.sprite.inputEnabled = true;
+      piece.tint = "blue";
+      this.setPiece(x,y, piece);
+    }
+  }
+      //piece.tint = "0x005500";
+};
 
 
 window.onload = function() {
@@ -21,31 +66,33 @@ window.onload = function() {
 var playGame = function(game){}
 playGame.prototype = {
 	preload: function(){
-          game.load.image("point", "point.png");
-          game.load.image("scream", "scream.jpg");
+    game.load.image("point", "point.png");
+    game.load.image("scream", "scream.jpg");
 	},
 	create: function(){
-          for(var i = 0; i < 4; i++){
-               var draggablePoint = game.add.sprite(game.rnd.between(100, game.width - 100), game.rnd.between(100, game.height - 100), "point");  
-               draggablePoint.inputEnabled = true;
-               draggablePoint.tint = pointColors[i];
-               draggablePoint.input.enableDrag(); 
-               draggablePoint.anchor.set(0.5);
-               draggablePoint.events.onDragStart.add(startDrag);  
-               draggablePoint.events.onDragStop.add(stopDrag);
-               draggablePoint.events.onDragUpdate.add(updateDrag);      
-               pointsArray[i] = draggablePoint; 
-          }
-          for(var i=0; i < pw*ph; i++){
-            var piece = game.add.sprite(game.rnd.between(100, game.width-100), game.rnd.between(100, game.height-100), "scream");
-            piece.inputEnabled = true;
-            piece.tint = "0x005500";
-            pieces[i] = piece;
-          }
-          bezierGraphics = this.game.add.graphics(0, 0);
-          updateDrag();
-          stopDrag();
-	}
+    puzzle = new Puzzle(game, "scream");
+    for(var i = 0; i < 4; i++){
+      var draggablePoint = game.add.sprite(game.rnd.between(100, game.width - 100), game.rnd.between(100, game.height - 100), "point");  
+      draggablePoint.inputEnabled = true;
+      draggablePoint.tint = pointColors[i];
+      draggablePoint.input.enableDrag(); 
+      draggablePoint.anchor.set(0.5);
+      draggablePoint.events.onDragStart.add(startDrag);  
+      draggablePoint.events.onDragStop.add(stopDrag);
+      draggablePoint.events.onDragUpdate.add(updateDrag);      
+      pointsArray[i] = draggablePoint; 
+    }
+    if(false)
+    for(var i=0; i < pw*ph; i++){
+      var piece = game.add.sprite(game.rnd.between(100, game.width-100), game.rnd.between(100, game.height-100), "scream");
+      piece.inputEnabled = true;
+      piece.tint = "0x005500";
+      pieces[i] = piece;
+    }
+    bezierGraphics = this.game.add.graphics(0, 0);
+    updateDrag();
+    stopDrag();
+  }
 }
 
 function startDrag(){
