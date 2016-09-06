@@ -49,11 +49,10 @@ var Puzzle = function(game, screamer, w,h, img){
       piece.cy = game.rnd.between(100, game.height-100);
       piece.sprite = this.game.add.sprite(piece.cx,piece.cy, screamer);
       piece.sprite.inputEnabled = true;
-      piece.tint = "blue";
+      //piece.sprite.tint = "0xaaaaaa";
       this.setPiece(x,y, piece);
     }
   }
-      //piece.tint = "0x005500";
 };
 
 
@@ -81,13 +80,6 @@ playGame.prototype = {
       draggablePoint.events.onDragStop.add(stopDrag);
       draggablePoint.events.onDragUpdate.add(updateDrag);      
       pointsArray[i] = draggablePoint; 
-    }
-    if(false)
-    for(var i=0; i < pw*ph; i++){
-      var piece = game.add.sprite(game.rnd.between(100, game.width-100), game.rnd.between(100, game.height-100), "scream");
-      piece.inputEnabled = true;
-      piece.tint = "0x005500";
-      pieces[i] = piece;
     }
     bezierGraphics = this.game.add.graphics(0, 0);
     updateDrag();
