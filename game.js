@@ -4,19 +4,11 @@ var pointsArray = [];
 var pointColors = ["0x00ff00", "0x008800", "0x880000", "0xff0000"];
 var bezierGraphics;
 var movingSprite;
-{
-  var pieces = [];
-  var pw = 4;
-  var ph = 4;
-  function pieceXY(x,y){
-    return pieces[y*pw + x];
-  }
-}
 
-var Puzzle = function(game, screamer, w,h, img){
+var Puzzle = function(game, screamer, pw,ph, img){
   this.game = game;
   this.screamer = screamer;
-  this.ph = ph;
+  this.ph = ph; // pieces wide/high, e.g. 15, 12
   this.pw = pw;
   this.iw = 300; //image size. as in, of all the pieces put together.
   this.ih = 300;
@@ -24,6 +16,8 @@ var Puzzle = function(game, screamer, w,h, img){
   //as in, the working area on which it's assembled by the player...
   this.cw = 400;
   this.ch = 400;
+  this.apw = this.iw / pw; // average piece width. not counting protrusions into neighboring pieces.
+  this.aph = this.ih / ph;
   this.img = img;
   this.pieces = [];
 
@@ -45,6 +39,7 @@ var Puzzle = function(game, screamer, w,h, img){
   for (var x = 0; x < pw; x++){
     for (var y = 0; y < ph; y++){
       var piece = new this.Piece();
+      //give it a random position on the canvas.
       piece.cx = game.rnd.between(100, game.width-100);
       piece.cy = game.rnd.between(100, game.height-100);
       piece.sprite = this.game.add.sprite(piece.cx,piece.cy, screamer);
@@ -69,7 +64,7 @@ playGame.prototype = {
     game.load.image("scream", "scream.jpg");
 	},
 	create: function(){
-    puzzle = new Puzzle(game, "scream");
+    puzzle = new Puzzle(game, "scream", 4, 4);
     for(var i = 0; i < 4; i++){
       var draggablePoint = game.add.sprite(game.rnd.between(100, game.width - 100), game.rnd.between(100, game.height - 100), "point");  
       draggablePoint.inputEnabled = true;
