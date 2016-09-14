@@ -24,34 +24,96 @@ var Puzzle = function(game, screamer, pw,ph, img){
   // nested class
   // px, py are col, row of the jigsaw cut.
   // cx,cy are positions on the canvas.
-  this.Piece = function(px,py){
+  this.Piece = function(px,py, borders){
     this.px = px;
     this.py = py;
     this.cx = 0;
     this.cy = 0;
+    this.borders = borders;
+
+    this.paths = function(){
+      var ret = [];
+      ret.push([50,0, 100,0, 100,100, 50,100]);
+      ret.push([50,100, 0,100, 0,0, 50,0]);
+      return ret;
+    };
+  };
+  this.PieceBorder = function(corner1, corner2){
+//    this.p1 = p1;
+//    this.p2 = p2;
+    //this.o = orientation; //'h' or 'v'
+    this.path = []; // a bunch of 8-value bezier control point arrays.
+    this.corner2 = corner2;
+    this.corner1 = corner1;
+  };
+  //this.PieceCorner = function(
+  this.Point = function(x,y){
+    this.x=x; this.y=y;
   };
 
   this.setPiece = function(x,y, piece){
     this.pieces[y*ph + x] = piece;
   }
 
-  this.piece_buffer = new PIXI.CanvasBuffer(this.iw, this.ih);
+  var piece_corners = [];
+  for (var x=0; x<=this.pw; x++){
+    piece_corners.push([]);
+    for (var y=0; y<=this.ph; y++){
+      var ix = this.apw * x;
+      var iy = this.aph * y;
+      piece_corners[x][y] = new this.Point(ix,iy);
+    }
+  }
+  //console.log(piece_corners);
+  //console.log(this);
+
+  //generate borders between pieces and at the sides of the image.
+  // horz first
+  var horz_piece_borders = [];
+  for (var x = 0; x < this.pw; x++){
+    horz_piece_borders.push([]);
+    for (var y = 0; y <= this.ph; y++){
+      var pb = new this.PieceBorder(piece_corners[x][y], piece_corners[x+1][y]);
+      horz_piece_borders[x][y] = pb;
+    }
+  }
+  // now vertical piece borders.
+  var vert_piece_borders = [];
+  for (var x = 0; x <= this.pw; x++){
+    vert_piece_borders.push([]);
+    for (var y = 0; y < this.ph; y++){
+      var pb = new this.PieceBorder(piece_corners[x][y], piece_corners[x][y+1]);
+      vert_piece_borders[x][y] = pb;
+    }
+  }
 
   //initialize puzzle by generating pieces.
   for (var x = 0; x < pw; x++){
     for (var y = 0; y < ph; y++){
-      var piece = new this.Piece();
+      var borders = [
+        horz_piece_borders[x][y],
+        horz_piece_borders[x][y+1],
+        vert_piece_borders[x][y],
+        vert_piece_borders[x+1][y]
+      ];
+      var piece = new this.Piece(x,y,borders);
       //give it a random position on the canvas.
       piece.cx = game.rnd.between(100, game.width-100);
       piece.cy = game.rnd.between(100, game.height-100);
 
-      //var context = this.piece_buffer.context;
       var piece_canvas = new PIXI.CanvasBuffer(400,400);
       var context = piece_canvas.context;
+      var paths = piece.paths();
+
       context.beginPath();
-      context.moveTo(188, game.rnd.between(100, game.width - 100));
-      context.bezierCurveTo(140, 10, 388, 10, 388, 170);
-      context.bezierCurveTo(0,250,0,150,game.rnd.between(100, game.width - 100), game.rnd.between(100, game.width - 100));
+      paths.forEach(function(bz){
+        context.moveTo(bz[0],bz[1]);
+        context.bezierCurveTo.apply(context, bz.slice(2));
+      });
+
+      //context.moveTo(188, game.rnd.between(100, game.width - 100));
+      //context.bezierCurveTo(140, 10, 388, 10, 388, 170);
+      //context.bezierCurveTo(0,250,0,150,game.rnd.between(100, game.width - 100), game.rnd.between(100, game.width - 100));
       var img=document.getElementById("scream");
       var pat = context.createPattern(img, "no-repeat");
       context.fillStyle = pat;
