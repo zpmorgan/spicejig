@@ -104,11 +104,12 @@ var Puzzle = function(game, screamer, pw,ph, img){
     for (var y = 0; y < ph; y++){
       var borders = [
         horz_piece_borders[x][y],
+        vert_piece_borders[x+1][y],
         horz_piece_borders[x][y+1],
-        vert_piece_borders[x][y],
-        vert_piece_borders[x+1][y]
+        vert_piece_borders[x][y]
       ];
       var piece = new this.Piece(x,y,borders);
+      piece.borderDirection = [0,0,1,1];
       //give it a random position on the canvas.
       piece.cx = game.rnd.between(100, game.width-100);
       piece.cy = game.rnd.between(100, game.height-100);
@@ -118,14 +119,21 @@ var Puzzle = function(game, screamer, pw,ph, img){
 
       var borders = piece.borders;
       context.beginPath();
-      borders.forEach(function(bo){
-        bo.getPaths().forEach(function(bz){
-          context.moveTo(bz[0].x, bz[0].y);
-          //context.bezierCurveTo.apply(context, bz.slice(2));
+      var movedTo = false;
+      for (var i = 0; i < borders.length; i++){
+        var bo = borders[i];
+        var reversed = piece.borderDirection[i];
+        bo.getPaths().forEach(function(bezier){
+          var bz = bezier.slice() // copy to perhaps reverse.
+          if (reversed)
+            bz.reverse();
+          if (movedTo == false){
+            context.moveTo(bz[0].x, bz[0].y);
+            movedTo = true;
+          }
           context.bezierCurveTo(bz[1].x, bz[1].y, bz[2].x, bz[2].y, bz[3].x, bz[3].y);
-          console.log(bz[1].x, bz[1].y, bz[2].x, bz[2].y, bz[3].x, bz[3].y);
         });
-      });
+      };
       /*
       context.beginPath();
       paths.forEach(function(bz){
