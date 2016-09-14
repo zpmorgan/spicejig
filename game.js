@@ -45,12 +45,24 @@ var Puzzle = function(game, screamer, pw,ph, img){
     this.path = []; // a bunch of 8-value bezier control point arrays.
     this.corner2 = corner2;
     this.corner1 = corner1;
-  };
-  //this.PieceCorner = function(
-  this.Point = function(x,y){
-    this.x=x; this.y=y;
+    //console.log(corner1, corner1.y);
+
+    this.getPaths = function(){
+      if(this._paths)
+        return this._paths;
+      var midpoint = Phaser.Point.multiplyAdd(corner1, corner2, .5);
+      var nubsize = .3;
+      var pvec = Phaser.Point.subtract(corner1, corner2).multiply(.3,.3).perp();
+      if(Phaser.Utils.chanceRoll()){
+        pvec = pvec.multiply(-1,-1);
+      }
+      var nubpoint = Phaser.Point.add(midpoint, pvec);
+      this._paths = [[corner1, nubpoint, midpoint, corner2]];
+      return this._paths;
+    }
   };
 
+  //todo: use this.
   this.setPiece = function(x,y, piece){
     this.pieces[y*ph + x] = piece;
   }
@@ -61,7 +73,7 @@ var Puzzle = function(game, screamer, pw,ph, img){
     for (var y=0; y<=this.ph; y++){
       var ix = this.apw * x;
       var iy = this.aph * y;
-      piece_corners[x][y] = new this.Point(ix,iy);
+      piece_corners[x][y] = new Phaser.Point(ix,iy);
     }
   }
   //console.log(piece_corners);
@@ -103,13 +115,24 @@ var Puzzle = function(game, screamer, pw,ph, img){
 
       var piece_canvas = new PIXI.CanvasBuffer(400,400);
       var context = piece_canvas.context;
-      var paths = piece.paths();
 
+      var borders = piece.borders;
+      context.beginPath();
+      borders.forEach(function(bo){
+        bo.getPaths().forEach(function(bz){
+          context.moveTo(bz[0].x, bz[0].y);
+          //context.bezierCurveTo.apply(context, bz.slice(2));
+          context.bezierCurveTo(bz[1].x, bz[1].y, bz[2].x, bz[2].y, bz[3].x, bz[3].y);
+          console.log(bz[1].x, bz[1].y, bz[2].x, bz[2].y, bz[3].x, bz[3].y);
+        });
+      });
+      /*
       context.beginPath();
       paths.forEach(function(bz){
         context.moveTo(bz[0],bz[1]);
         context.bezierCurveTo.apply(context, bz.slice(2));
       });
+     */
 
       //context.moveTo(188, game.rnd.between(100, game.width - 100));
       //context.bezierCurveTo(140, 10, 388, 10, 388, 170);
