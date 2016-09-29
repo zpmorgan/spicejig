@@ -154,6 +154,10 @@ var Puzzle = function(game, screamer, pw,ph, img){
       //piece.sprite = this.game.add.sprite(piece.cx,piece.cy, screamer);
       piece.sprite = this.game.add.sprite(piece.cx,piece.cy, this.texture);
       piece.sprite.inputEnabled = true;
+      piece.sprite.input.enableDrag();/*
+      piece.sprite.events.onDragStart.add(startDrag);
+      piece.sprite.events.onDragStop.add(stopDrag);
+      piece.sprite.events.onDragUpdate.add(updateDrag);*/
       this.setPiece(x,y, piece);
     }
   }
@@ -174,6 +178,7 @@ playGame.prototype = {
 	},
 	create: function(){
     puzzle = new Puzzle(game, "scream", 4, 4);
+    /*
     for(var i = 0; i < 4; i++){
       var draggablePoint = game.add.sprite(game.rnd.between(100, game.width - 100), game.rnd.between(100, game.height - 100), "point");
       draggablePoint.inputEnabled = true;
@@ -188,6 +193,7 @@ playGame.prototype = {
     bezierGraphics = this.game.add.graphics(0, 0);
     updateDrag();
     stopDrag();
+   */
   }
 }
 
