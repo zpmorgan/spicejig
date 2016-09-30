@@ -137,21 +137,14 @@ var Puzzle = function(game, screamer, pw,ph, img){
           context.bezierCurveTo(bz[1].x, bz[1].y, bz[2].x, bz[2].y, bz[3].x, bz[3].y);
         });
       };
-      /*
-      context.beginPath();
-      paths.forEach(function(bz){
-        context.moveTo(bz[0],bz[1]);
-        context.bezierCurveTo.apply(context, bz.slice(2));
-      });
-     */
 
-      //context.moveTo(188, game.rnd.between(100, game.width - 100));
-      //context.bezierCurveTo(140, 10, 388, 10, 388, 170);
-      //context.bezierCurveTo(0,250,0,150,game.rnd.between(100, game.width - 100), game.rnd.between(100, game.width - 100));
       var img=document.getElementById("scream");
       var pat = context.createPattern(img, "no-repeat");
       context.fillStyle = pat;
+      context.save()
+      context.translate(-piece_disp.x, -piece_disp.y);
       context.fill();
+      context.restore();
       this.texture = PIXI.Texture.fromCanvas(piece_canvas.canvas);
 
       //piece.sprite = this.game.add.sprite(piece.cx,piece.cy, screamer);
