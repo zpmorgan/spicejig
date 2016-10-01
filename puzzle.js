@@ -14,6 +14,7 @@ var Puzzle = function(game, screamer, pw,ph, img){
   this.aph = this.ih / ph;
   this.img = img;
   this.pieces = [];
+  var puz = this;
 
   // nested class
   // px, py are col, row of the jigsaw cut.
@@ -24,34 +25,54 @@ var Puzzle = function(game, screamer, pw,ph, img){
     this.cx = 0;
     this.cy = 0;
     this.borders = borders;
-
-    this.paths = function(){
-      var ret = [];
-      ret.push([50,0, 100,0, 100,100, 50,100]);
-      ret.push([50,100, 0,100, 0,0, 50,0]);
-      return ret;
-    };
   };
+  this.squiggle = function(){
+    var A = new Phaser.Point(0,0);
+    var B = new Phaser.Point(1,0);
+    var midpoint = new Phaser.Point(0.5, 0);
+    var nubpoint = new Phaser.Point(0.5, 0.1);
+    var bpaths = [[A, nubpoint, midpoint, B]];
+    //console.log(JSON.stringify(bpaths));
+    return bpaths;
+  }
   this.PieceBorder = function(corner1, corner2){
-//    this.p1 = p1;
-//    this.p2 = p2;
-    //this.o = orientation; //'h' or 'v'
-    this.path = []; // a bunch of 8-value bezier control point arrays.
+    this.path = []; // a bunch of 4-point bezier control point arrays. (of Phaser.Point()s)
     this.corner2 = corner2;
     this.corner1 = corner1;
-    //console.log(corner1, corner1.y);
 
     this.getPaths = function(){
       if(this._paths)
         return this._paths;
+      //this._paths = this.squiggle(); // [[bz],[bz],...]
+      var squig = puz.squiggle(); // [[bz],[bz],...]
+      var first_squig_point = squig[0][0];
+      var last_squig_point = squig[squig.length-1][3];
+      var squig_vector = Phaser.Point.subtract(last_squig_point, first_squig_point);
+      var border_vector = Phaser.Point.subtract(corner2, corner1);
+      var angle = Phaser.Point.angle(border_vector, squig_vector); //in radians
+      //angle prolly pi/2 or 0;
+      var scale = border_vector.getMagnitude() / squig_vector.getMagnitude();
+      for(var i=0; i < squig.length; i++){
+        for (var j=0; j < 4; j++){
+          var p = Phaser.Point.subtract(squig[i][j], first_squig_point);//probably 0,0 anyways
+          p.rotate(0,0,angle, false);
+          p.multiply(scale, scale);
+          squig[i][j] = Phaser.Point.add(p, corner1);
+        }
+      }
+      this._paths = squig;
+      console.log(JSON.stringify([corner1,corner2]));
+      console.log(JSON.stringify(squig));
+      /*
       var midpoint = Phaser.Point.multiplyAdd(corner1, corner2, .5);
       var nubsize = .3;
       var pvec = Phaser.Point.subtract(corner1, corner2).multiply(.3,.3).perp();
       if(Phaser.Utils.chanceRoll()){
-        pvec = pvec.multiply(-1,-1);
+        pvec.multiply(-1,-1);
       }
       var nubpoint = Phaser.Point.add(midpoint, pvec);
       this._paths = [[corner1, nubpoint, midpoint, corner2]];
+     */
       return this._paths;
     }
   };
@@ -134,6 +155,7 @@ var Puzzle = function(game, screamer, pw,ph, img){
             context.moveTo(bz[0].x, bz[0].y);
             movedTo = true;
           }
+          console.log(bz);
           context.bezierCurveTo(bz[1].x, bz[1].y, bz[2].x, bz[2].y, bz[3].x, bz[3].y);
         });
       };
