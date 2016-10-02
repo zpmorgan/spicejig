@@ -35,7 +35,7 @@ var Puzzle = function(game, screamer, pw,ph, img){
     //console.log(JSON.stringify(bpaths));
     return bpaths;
   }
-  this.PieceBorder = function(corner1, corner2){
+  this.PieceBorder = function(corner1, corner2, straight_line){
     this.path = []; // a bunch of 4-point bezier control point arrays. (of Phaser.Point()s)
     this.corner2 = corner2;
     this.corner1 = corner1;
@@ -43,6 +43,10 @@ var Puzzle = function(game, screamer, pw,ph, img){
     this.getPaths = function(){
       if(this._paths)
         return this._paths;
+      if (straight_line){
+        this._paths = [[corner1, corner1, corner2, corner2]];
+        return this._paths;
+      }
       //this._paths = this.squiggle(); // [[bz],[bz],...]
       var squig = puz.squiggle(); // [[bz],[bz],...]
       var first_squig_point = squig[0][0];
@@ -100,7 +104,10 @@ var Puzzle = function(game, screamer, pw,ph, img){
   for (var x = 0; x < this.pw; x++){
     horz_piece_borders.push([]);
     for (var y = 0; y <= this.ph; y++){
-      var pb = new this.PieceBorder(piece_corners[x][y], piece_corners[x+1][y]);
+      var straight = false;
+      if (y==0 || y==this.ph)
+        straight = true;
+      var pb = new this.PieceBorder(piece_corners[x][y], piece_corners[x+1][y], straight);
       horz_piece_borders[x][y] = pb;
     }
   }
@@ -109,7 +116,10 @@ var Puzzle = function(game, screamer, pw,ph, img){
   for (var x = 0; x <= this.pw; x++){
     vert_piece_borders.push([]);
     for (var y = 0; y < this.ph; y++){
-      var pb = new this.PieceBorder(piece_corners[x][y], piece_corners[x][y+1]);
+      var straight = false;
+      if (y==0 || y==this.ph)
+        straight = true;
+      var pb = new this.PieceBorder(piece_corners[x][y], piece_corners[x][y+1], straight);
       vert_piece_borders[x][y] = pb;
     }
   }
