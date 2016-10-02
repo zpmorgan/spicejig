@@ -27,11 +27,17 @@ var Puzzle = function(game, screamer, pw,ph, img){
     this.borders = borders;
   };
   this.squiggle = function(){
-    var A = new Phaser.Point(0,0);
+    var A = new Phaser.Point(0,0);//start pt
+    var AA = new Phaser.Point(0.2,0.1);//control pt
     var B = new Phaser.Point(1,0);
+    var BB = new Phaser.Point(0.8,-.1);
     var midpoint = new Phaser.Point(0.5, 0);
-    var nubpoint = new Phaser.Point(0.5, 0.1);
-    var bpaths = [[A, nubpoint, midpoint, B]];
+    var nubpoint = new Phaser.Point(0.5, 0.2);
+    var nub_A = new Phaser.Point(0.4, 0.2);
+    var nub_B = new Phaser.Point(0.6, 0.2);
+    var bpaths = [
+      [A, AA, nub_A, nubpoint],
+      [nubpoint, nub_B, BB, B]];
     //console.log(JSON.stringify(bpaths));
     return bpaths;
   }
@@ -40,7 +46,7 @@ var Puzzle = function(game, screamer, pw,ph, img){
     this.corner2 = corner2;
     this.corner1 = corner1;
 
-    this.getPaths = function(){
+    this.getPaths = function(){ //not a copy so be careful
       if(this._paths)
         return this._paths;
       if (straight_line){
@@ -155,7 +161,10 @@ var Puzzle = function(game, screamer, pw,ph, img){
       for (var i = 0; i < borders.length; i++){
         var bo = borders[i];
         var reversed = piece.borderDirection[i];
-        bo.getPaths().forEach(function(bezier){
+        var paths = bo.getPaths().slice();
+        if(reversed)
+          paths.reverse();
+        paths.forEach(function(bezier){
           var bz = bezier.slice() // copy to perhaps reverse and make relative to piece buffer
           for(j=0;j<4;j++)
             bz[j] = Phaser.Point.subtract(bz[j], piece_disp);
