@@ -207,6 +207,8 @@ var Puzzle = function(game, screamer, pw,ph, img){
       piece.sprite = this.game.add.sprite(piece.cx,piece.cy, this.texture);
       piece.sprite.inputEnabled = true;
       piece.sprite.input.enableDrag();
+      piece.sprite.input.pixelPerfectAlpha = 128;
+      piece.sprite.input.pixelPerfectClick = true;
       this.setPiece(x,y, piece);
     }
   }
