@@ -25,6 +25,32 @@ var Puzzle = function(game, screamer, pw,ph, img){
     this.cx = 0;
     this.cy = 0;
     this.borders = borders;
+    this.getBounds = function(){
+      var first_point = borders[0].getPaths()[0][0];// bz[0][0][0];
+      var x1 = first_point.x;
+      var x2 = first_point.x;
+      var y1 = first_point.y;
+      var y2 = first_point.y;
+      this.borders.forEach(function(bd){
+        bd.getPaths().forEach(function(bz){
+          if(bz[0].x < x1) x1 = bz[0].x;
+          if(bz[3].x < x1) x1 = bz[3].x;
+          if(bz[0].x > x2) x2 = bz[0].x;
+          if(bz[3].x > x2) x2 = bz[3].x;
+          if(bz[0].y < y1) y1 = bz[0].y;
+          if(bz[3].y < y1) y1 = bz[3].y;
+          if(bz[0].y > y2) y2 = bz[0].y;
+          if(bz[3].y > y2) y2 = bz[3].y;
+        });
+      });
+      var x1;
+
+      console.log(x1,x2,y1,y2);
+      console.log(first_point);
+      return new Phaser.Rectangle(x1,y1, x2-x1, y2-y1);
+      return [new Phaser.Point(x1,y1), new Phaser.Point(x2,y2)];
+      return [x1,y1,x2,y2];
+    }
   };
   this.squiggle = function(){
     var A = new Phaser.Point(0,0);//start pt
@@ -71,18 +97,6 @@ var Puzzle = function(game, screamer, pw,ph, img){
         }
       }
       this._paths = squig;
-      console.log(JSON.stringify([corner1,corner2]));
-      console.log(JSON.stringify(squig));
-      /*
-      var midpoint = Phaser.Point.multiplyAdd(corner1, corner2, .5);
-      var nubsize = .3;
-      var pvec = Phaser.Point.subtract(corner1, corner2).multiply(.3,.3).perp();
-      if(Phaser.Utils.chanceRoll()){
-        pvec.multiply(-1,-1);
-      }
-      var nubpoint = Phaser.Point.add(midpoint, pvec);
-      this._paths = [[corner1, nubpoint, midpoint, corner2]];
-     */
       return this._paths;
     }
   };
@@ -145,20 +159,21 @@ var Puzzle = function(game, screamer, pw,ph, img){
       piece.cx = game.rnd.between(100, game.width-100);
       piece.cy = game.rnd.between(100, game.height-100);
 
-      var piece_center = new Phaser.Point((x+0.5) * this.apw, (y+0.5)*this.aph);
       var piece_disp = new Phaser.Point((x) * this.apw, (y)*this.aph);
       var rel = function(pt){
         return Phaser.Point.subtract(pt, piece_disp);
       };
 
+      var bounds = piece.getBounds();
+      var piece_disp = bounds.topLeft;
       //var piece_canvas = new PIXI.CanvasBuffer(400,400);
-      var piece_canvas = new PIXI.CanvasBuffer(this.apw,this.aph);
+      var piece_canvas = new PIXI.CanvasBuffer(bounds.width, bounds.height);
       var context = piece_canvas.context;
 
       var borders = piece.borders;
       context.beginPath();
       var movedTo = false;
-      for (var i = 0; i < borders.length; i++){
+      for (var i = 0; i < borders.length; i++){ //draw the curve on the canvas
         var bo = borders[i];
         var reversed = piece.borderDirection[i];
         var paths = bo.getPaths().slice();
@@ -174,11 +189,11 @@ var Puzzle = function(game, screamer, pw,ph, img){
             context.moveTo(bz[0].x, bz[0].y);
             movedTo = true;
           }
-          console.log(bz);
           context.bezierCurveTo(bz[1].x, bz[1].y, bz[2].x, bz[2].y, bz[3].x, bz[3].y);
         });
       };
 
+      //fill it in with the image
       var img=document.getElementById("scream");
       var pat = context.createPattern(img, "no-repeat");
       context.fillStyle = pat;
