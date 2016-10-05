@@ -75,7 +75,7 @@ var Puzzle = function(game, screamer, pw,ph, img){
     this.getPaths = function(){ //not a copy so be careful
       if(this._paths)
         return this._paths;
-      if (straight_line){
+      if (straight_line == true){
         this._paths = [[corner1, corner1, corner2, corner2]];
         return this._paths;
       }
@@ -137,7 +137,7 @@ var Puzzle = function(game, screamer, pw,ph, img){
     vert_piece_borders.push([]);
     for (var y = 0; y < this.ph; y++){
       var straight = false;
-      if (y==0 || y==this.ph)
+      if (x==0 || x==this.pw)
         straight = true;
       var pb = new this.PieceBorder(piece_corners[x][y], piece_corners[x][y+1], straight);
       vert_piece_borders[x][y] = pb;
