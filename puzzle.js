@@ -43,10 +43,6 @@ var Puzzle = function(game, screamer, pw,ph, img){
           if(bz[3].y > y2) y2 = bz[3].y;
         });
       });
-      var x1;
-
-      console.log(x1,x2,y1,y2);
-      console.log(first_point);
       return new Phaser.Rectangle(x1,y1, x2-x1, y2-y1);
       return [new Phaser.Point(x1,y1), new Phaser.Point(x2,y2)];
       return [x1,y1,x2,y2];
