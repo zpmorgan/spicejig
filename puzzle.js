@@ -201,8 +201,10 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
       var sprite = puzzle.game.add.sprite(piece.cx,piece.cy, tex);
       sprite.inputEnabled = true;
       sprite.input.enableDrag();
+      //sprite.input.boundsRect = puzzle.game.camera;
       sprite.input.pixelPerfectAlpha = 128;
       sprite.input.pixelPerfectClick = true;
+      sprite.input.bringToTop = true;
       this._sprite = sprite;
 
       return sprite;
