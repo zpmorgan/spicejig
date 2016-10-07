@@ -19,19 +19,19 @@ var Puzzle = function(game, screamer, pw,ph, img){
   // nested class
   // px, py are col, row of the jigsaw cut.
   // cx,cy are positions on the canvas.
-  this.Piece = function(px,py, borders){
-    this.px = px;
-    this.py = py;
+  this.Piece = function(){
     this.cx = 0;
     this.cy = 0;
-    this.borders = borders;
+    //this.borders = [];
+
     this.getBounds = function(){
+      var borders = this.getBorders();
       var first_point = borders[0].getPaths()[0][0];// bz[0][0][0];
       var x1 = first_point.x;
       var x2 = first_point.x;
       var y1 = first_point.y;
       var y2 = first_point.y;
-      this.borders.forEach(function(bd){
+      borders.forEach(function(bd){
         bd.getPaths().forEach(function(bz){
           if(bz[0].x < x1) x1 = bz[0].x;
           if(bz[3].x < x1) x1 = bz[3].x;
@@ -48,6 +48,16 @@ var Puzzle = function(game, screamer, pw,ph, img){
       return [x1,y1,x2,y2];
     }
   };
+  this.SinglePiece = function(px,py,borders){
+    this.px = px;
+    this.py = py;
+    this.borders = borders;
+    this.getBorders = function(){
+      return this.borders;
+    };
+  }
+  this.SinglePiece.prototype = new this.Piece();
+
   this.squiggle = function(){
     var A = new Phaser.Point(0,0);//start pt
     var AA = new Phaser.Point(0.2,0.1);//control pt
@@ -100,36 +110,46 @@ var Puzzle = function(game, screamer, pw,ph, img){
   };
 
   //different pieces glommed together (or just one piece) make a globule
+  // extends piece.
   this.Globule = function(piece){
-    this.pieces = [piece];
+    this.pieces = [piece]; // single pieces
     this.borders = [];
 
     //if the same border is contained twice then it's not drawn.
-    this.border_instances = [];
+    this.border_instances = {};
     this.incrementBorderInstances = function(borders){
-      borders.foreach(function(bd){
-        if (! bd.id in border_instances)
-          border_instances[bd.id] = 0;
-        border_instances[bd.id]++;
-      });
+      borders.forEach(function(bd){
+        if (! bd.id in this.border_instances)
+          this.border_instances[bd.id] = 0;
+        this.border_instances[bd.id]++;
+      }, this);
     };
-    this.incrementBorderInstances(piece.getPaths());
+    this.incrementBorderInstances(piece.getBorders());
 
     this.getBorders = function(){
       var ret = [];
-      this.border_instances.foreach(function(bd){
-        if (this.border_instances[bd.id] = 1)
-          ret.push(bd);
-      });
+      this.pieces.forEach(function(pc){
+        pc.getBorders().forEach( function(bd){
+          if (this.border_instances[bd.id] = 1)
+            ret.push(bd);
+        }, this);
+      }, this);
       return ret;
     };
+
     this.glomGlobule = function(glob2){ // merge with another globule.
-      this.incrementBorderInstances(glob2.getBorders); // merge borders
-      glob2.pieces.foreach(function(pc){ //push pieces
+      this.incrementBorderInstances(glob2.getBorders()); // merge borders
+      glob2.pieces.forEach(function(pc){ //push pieces
         this.pieces.push(pieces);
-      });
+      }, this);
     };
+
+    this.canvasBuffer = function(){
+
+    }
   }
+
+  this.Globule.prototype = new this.Piece();
 
   //todo: use this.
   this.setPiece = function(x,y, piece){
@@ -183,7 +203,10 @@ var Puzzle = function(game, screamer, pw,ph, img){
         horz_piece_borders[x][y+1],
         vert_piece_borders[x][y]
       ];
-      var piece = new this.Piece(x,y,borders);
+      var s_piece = new this.SinglePiece(x,y,borders);
+      this.setPiece(x,y, s_piece);
+
+      var piece = new this.Globule(s_piece);
       piece.borderDirection = [0,0,1,1];
       //give it a random position on the canvas.
       piece.cx = game.rnd.between(100, game.width-100);
@@ -198,9 +221,10 @@ var Puzzle = function(game, screamer, pw,ph, img){
       var piece_disp = bounds.topLeft;
       //var piece_canvas = new PIXI.CanvasBuffer(400,400);
       var piece_canvas = new PIXI.CanvasBuffer(bounds.width, bounds.height);
+      console.log(JSON.stringify(bounds));
       var context = piece_canvas.context;
 
-      var borders = piece.borders;
+      var borders = piece.getBorders();
       context.beginPath();
       var movedTo = false;
       for (var i = 0; i < borders.length; i++){ //draw the curve on the canvas
@@ -220,7 +244,7 @@ var Puzzle = function(game, screamer, pw,ph, img){
             movedTo = true;
           }
           context.bezierCurveTo(bz[1].x, bz[1].y, bz[2].x, bz[2].y, bz[3].x, bz[3].y);
-        });
+        }, this);
       };
 
       //fill it in with the image
