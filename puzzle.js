@@ -63,8 +63,10 @@ var Puzzle = function(game, screamer, pw,ph, img){
     //console.log(JSON.stringify(bpaths));
     return bpaths;
   }
+  var _piece_border_id = 0;
   this.PieceBorder = function(corner1, corner2, straight_line){
     this.path = []; // a bunch of 4-point bezier control point arrays. (of Phaser.Point()s)
+    this.id = ++_piece_border_id;
     this.corner2 = corner2;
     this.corner1 = corner1;
 
@@ -96,6 +98,38 @@ var Puzzle = function(game, screamer, pw,ph, img){
       return this._paths;
     }
   };
+
+  //different pieces glommed together (or just one piece) make a globule
+  this.Globule = function(piece){
+    this.pieces = [piece];
+    this.borders = [];
+
+    //if the same border is contained twice then it's not drawn.
+    this.border_instances = [];
+    this.incrementBorderInstances = function(borders){
+      borders.foreach(function(bd){
+        if (! bd.id in border_instances)
+          border_instances[bd.id] = 0;
+        border_instances[bd.id]++;
+      });
+    };
+    this.incrementBorderInstances(piece.getPaths());
+
+    this.getBorders = function(){
+      var ret = [];
+      this.border_instances.foreach(function(bd){
+        if (this.border_instances[bd.id] = 1)
+          ret.push(bd);
+      });
+      return ret;
+    };
+    this.glomGlobule = function(glob2){ // merge with another globule.
+      this.incrementBorderInstances(glob2.getBorders); // merge borders
+      glob2.pieces.foreach(function(pc){ //push pieces
+        this.pieces.push(pieces);
+      });
+    };
+  }
 
   //todo: use this.
   this.setPiece = function(x,y, piece){
