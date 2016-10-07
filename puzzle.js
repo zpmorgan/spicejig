@@ -1,6 +1,6 @@
 
-var Puzzle = function(game, screamer, pw,ph, img){
-  this.game = game;
+var Puzzle = function(gaem, screamer, pw,ph, img){
+  this.game = gaem;
   this.screamer = screamer;
   this.ph = ph; // pieces wide/high, e.g. 15, 12
   this.pw = pw;
@@ -144,6 +144,70 @@ var Puzzle = function(game, screamer, pw,ph, img){
       }, this);
     };
 
+    this.genSprite = function(puzzle){
+      borderDirection = [0,0,1,1];
+      //give it a random position on the canvas.
+      console.log(puzzle.game);
+      console.log(puzzle.game.rnd);
+      piece.cx = puzzle.game.rnd.between(100, puzzle.game.width-100);
+      piece.cy = puzzle.game.rnd.between(100, puzzle.game.height-100);
+
+      var piece_disp = new Phaser.Point((x) * this.apw, (y)*this.aph);
+      var rel = function(pt){
+        return Phaser.Point.subtract(pt, piece_disp);
+      };
+
+      var bounds = this.getBounds();
+      console.log(JSON.stringify(bounds));
+      var piece_disp = bounds.topLeft;
+      //var piece_canvas = new PIXI.CanvasBuffer(400,400);
+      var piece_canvas = new PIXI.CanvasBuffer(bounds.width, bounds.height);
+      var context = piece_canvas.context;
+
+      var borders = piece.getBorders();
+      context.beginPath();
+      var movedTo = false;
+      for (var i = 0; i < borders.length; i++){ //draw the curve on the canvas
+        var bo = borders[i];
+        var reversed = borderDirection[i];
+        var paths = bo.getPaths().slice();
+        if(reversed)
+          paths.reverse();
+        paths.forEach(function(bezier){
+          var bz = bezier.slice() // copy to perhaps reverse and make relative to piece buffer
+          for(j=0;j<4;j++)
+            bz[j] = Phaser.Point.subtract(bz[j], piece_disp);
+          if (reversed)
+            bz.reverse();
+          if (movedTo == false){
+            context.moveTo(bz[0].x, bz[0].y);
+            movedTo = true;
+          }
+          context.bezierCurveTo(bz[1].x, bz[1].y, bz[2].x, bz[2].y, bz[3].x, bz[3].y);
+        }, this);
+      };
+
+      //fill it in with the image
+      var img=document.getElementById("scream");
+      var pat = context.createPattern(img, "no-repeat");
+      context.fillStyle = pat;
+      context.save()
+      context.translate(-piece_disp.x, -piece_disp.y);
+      context.fill();
+      context.restore();
+      var tex = PIXI.Texture.fromCanvas(piece_canvas.canvas);
+
+      //piece.sprite = this.game.add.sprite(piece.cx,piece.cy, screamer);
+      var sprite = puzzle.game.add.sprite(piece.cx,piece.cy, tex);
+      sprite.inputEnabled = true;
+      sprite.input.enableDrag();
+      sprite.input.pixelPerfectAlpha = 128;
+      sprite.input.pixelPerfectClick = true;
+      this._sprite = sprite;
+
+      return sprite;
+    }
+
     this.canvasBuffer = function(){
 
     }
@@ -207,63 +271,7 @@ var Puzzle = function(game, screamer, pw,ph, img){
       this.setPiece(x,y, s_piece);
 
       var piece = new this.Globule(s_piece);
-      piece.borderDirection = [0,0,1,1];
-      //give it a random position on the canvas.
-      piece.cx = game.rnd.between(100, game.width-100);
-      piece.cy = game.rnd.between(100, game.height-100);
-
-      var piece_disp = new Phaser.Point((x) * this.apw, (y)*this.aph);
-      var rel = function(pt){
-        return Phaser.Point.subtract(pt, piece_disp);
-      };
-
-      var bounds = piece.getBounds();
-      var piece_disp = bounds.topLeft;
-      //var piece_canvas = new PIXI.CanvasBuffer(400,400);
-      var piece_canvas = new PIXI.CanvasBuffer(bounds.width, bounds.height);
-      console.log(JSON.stringify(bounds));
-      var context = piece_canvas.context;
-
-      var borders = piece.getBorders();
-      context.beginPath();
-      var movedTo = false;
-      for (var i = 0; i < borders.length; i++){ //draw the curve on the canvas
-        var bo = borders[i];
-        var reversed = piece.borderDirection[i];
-        var paths = bo.getPaths().slice();
-        if(reversed)
-          paths.reverse();
-        paths.forEach(function(bezier){
-          var bz = bezier.slice() // copy to perhaps reverse and make relative to piece buffer
-          for(j=0;j<4;j++)
-            bz[j] = Phaser.Point.subtract(bz[j], piece_disp);
-          if (reversed)
-            bz.reverse();
-          if (movedTo == false){
-            context.moveTo(bz[0].x, bz[0].y);
-            movedTo = true;
-          }
-          context.bezierCurveTo(bz[1].x, bz[1].y, bz[2].x, bz[2].y, bz[3].x, bz[3].y);
-        }, this);
-      };
-
-      //fill it in with the image
-      var img=document.getElementById("scream");
-      var pat = context.createPattern(img, "no-repeat");
-      context.fillStyle = pat;
-      context.save()
-      context.translate(-piece_disp.x, -piece_disp.y);
-      context.fill();
-      context.restore();
-      this.texture = PIXI.Texture.fromCanvas(piece_canvas.canvas);
-
-      //piece.sprite = this.game.add.sprite(piece.cx,piece.cy, screamer);
-      piece.sprite = this.game.add.sprite(piece.cx,piece.cy, this.texture);
-      piece.sprite.inputEnabled = true;
-      piece.sprite.input.enableDrag();
-      piece.sprite.input.pixelPerfectAlpha = 128;
-      piece.sprite.input.pixelPerfectClick = true;
-      this.setPiece(x,y, piece);
+      var sprite = piece.genSprite(this);
     }
   }
 };
