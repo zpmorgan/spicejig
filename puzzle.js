@@ -75,7 +75,6 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
   }
   var _piece_border_id = 0;
   this.PieceBorder = function(corner1, corner2, straight_line){
-    this.path = []; // a bunch of 4-point bezier control point arrays. (of Phaser.Point()s)
     this.id = ++_piece_border_id;
     this.corner2 = corner2;
     this.corner1 = corner1;
@@ -140,19 +139,20 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
     };
 
     this.glomGlobule = function(glob2){ // merge with another globule.
+      var b1 = this.getBounds();
+      var b2 = glob2.getBounds();
+      var bu = Phaser.Rectangle.union(b1,b2);
       this.incrementBorderInstances(glob2.getBorders()); // merge borders
       glob2.pieces.forEach(function(pc){ //push pieces
         this.pieces.push(pc);
       }, this);
       this._neighbors.push.apply(this._neighbors, glob2._neighbors);
       glob2.parent = this;
-      var b1 = this.getBounds();
-      var b2 = glob2.getBounds();
-      var bu = Phaser.Rectangle.union(b1,b2);
       if(bu.x < b1.x)
-        b1.cx -= b1.x - bu.x;
+        this.cx -= (b1.x - bu.x);
       if(bu.y < b1.y)
-        b1.cy -= b1.y - bu.y;
+        //this.cy = bu.y;
+        this.cy -= b1.y - bu.y;
       this._sprite.destroy();
       glob2._sprite.destroy();
       this.genSprite();
@@ -165,7 +165,6 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
       neighbors.forEach(function(n){
         var d2 = n.getDisp();
         var dist = Phaser.Point.distance(d1,d2);
-        //console.log(dist, d1, d2);
         if (dist < 5)
           this.glomGlobule(n);
           //n.glomGlobule(this);
@@ -209,8 +208,6 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
         bd_from_pt[borders[bd].corner2.id] = [];
         borders[bd].flag_reverse = false;
         borders[bd].flag_begin_path = false;
-        //borders[bd].corner1.flag_begin_path = false;
-        //borders[bd].corner2.flag_begin_path = false;
       }
       for (var bd in borders){
         bd_from_pt[borders[bd].corner1.id].push(borders[bd]);
@@ -240,14 +237,18 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
             if (route.includes(next_bd_candidates[i]))
               continue;
             next_bd = next_bd_candidates[i];
-            if (next_bd.point1 = next_pt)
+            if (next_bd.corner2 == next_pt)
               next_bd.flag_reverse = true;
             break;
           }
-          if (! next_bd)
-            break; //completed a loop. there may be an internal loop or something.
+          if (! next_bd){
+            //console.log("loopyness");
+            break;
+            //completed a loop. there may be an internal loop or something.
+            //if so the process will repeat with a start flag.
+          }
           route.push(next_bd);
-          console.log(route);
+          //console.log(route);
         }
       }
 
