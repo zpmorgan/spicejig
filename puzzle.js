@@ -1,4 +1,50 @@
 
+// returns a gaussian random function with the given mean and stdev.
+function gaussian(mean, stdev) {
+    var y2;
+    var use_last = false;
+    return function() {
+        var y1;
+        if(use_last) {
+           y1 = y2;
+           use_last = false;
+        }
+        else {
+            var x1, x2, w;
+            do {
+                 x1 = 2.0 * Math.random() - 1.0;
+                 x2 = 2.0 * Math.random() - 1.0;
+                 w  = x1 * x1 + x2 * x2;
+            } while( w >= 1.0);
+            w = Math.sqrt((-2.0 * Math.log(w))/w);
+            y1 = x1 * w;
+            y2 = x2 * w;
+            use_last = true;
+       }
+
+       var retval = mean + stdev * y1;
+       if(retval > 0)
+           return retval;
+       return -retval;
+   }
+}
+// http://stackoverflow.com/questions/25582882/javascript-math-random-normal-distribution-gaussian-bell-curve
+require(['phaser'], function(){
+  var _gauss_1 = gaussian(0,1);
+  Phaser.Point.Gaussian = function(stddev){
+    return new Phaser.Point(_gauss_1()*stddev, _gauss_1()*stddev);
+  };
+  Phaser.Point.prototype.perturb = function(x,y){
+    if (x === undefined)
+      x=1;
+    if (y===undefined)
+      y=x;
+    this.x += _gauss_1() * x;
+    this.y += _gauss_1() * y;
+    return this;
+  };
+});
+
 var Puzzle = function(gaem, screamer, pw,ph, img){
   "use strict";
   this.game = gaem;
@@ -57,14 +103,15 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
   this.SinglePiece.prototype = new this.Piece();
 
   this.squiggle = function(){
+    var p = 0.5
     var A = new Phaser.Point(0,0);//start pt
-    var AA = new Phaser.Point(0.2,0.1);//control pt
+    var AA = new Phaser.Point(0.2,0).perturb(0,p);//control pt
     var B = new Phaser.Point(1,0);
-    var BB = new Phaser.Point(0.8,-0.1);
-    var midpoint = new Phaser.Point(0.5, 0);
-    var nubpoint = new Phaser.Point(0.5, 0.2);
-    var nub_A = new Phaser.Point(0.4, 0.2);
-    var nub_B = new Phaser.Point(0.6, 0.2);
+    var BB = new Phaser.Point(0.8,0).perturb(0,p);
+    var midpoint = new Phaser.Point(0.5, 0).perturb(p,0);
+    var nubpoint = new Phaser.Point(midpoint.x, 0.2).perturb(0, p);
+    var nub_A = new Phaser.Point(midpoint.x-0.1, 0.2);
+    var nub_B = new Phaser.Point(midpoint.x+0.1, 0.2);
     var bpaths = [
       [A, AA, nub_A, nubpoint],
       [nubpoint, nub_B, BB, B]];
