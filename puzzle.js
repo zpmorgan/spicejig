@@ -1,3 +1,4 @@
+"use strict";
 
 var Puzzle = function(gaem, screamer, pw,ph, img){
   this.game = gaem;
@@ -13,7 +14,6 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
   this.apw = this.iw / pw; // average piece width. not counting protrusions into neighboring pieces.
   this.aph = this.ih / ph;
   this.img = img;
-  this.pieces = [];
   var puz = this;
 
   // nested class
@@ -114,6 +114,7 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
   this.Globule = function(piece){
     this.pieces = [piece]; // single pieces
     this.borders = [];
+    this._neighbors = [];
 
     //if the same border is contained twice then it's not drawn.
     this.border_instances = {};
@@ -142,24 +143,70 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
       glob2.pieces.forEach(function(pc){ //push pieces
         this.pieces.push(pieces);
       }, this);
+      this._neighbors.push.apply(this._neighbors, glob2._neighbors);
+      glob2.parent = this;
+      // globule.findActualNeighbors should hammer out dupes, etc.
+      /*
+      glob2._neighbors.forEach(function(n){
+        //puzzle.getGlobuleGlom() should be done on everything when glom checking after drag
+        var glommed_neighbor = puz.getGlobuleGlom(n);
+        if (glommed_neighbor = this)
+          return;
+        if (this._neighbors.includes(glommed_neighbor))
+          return;
+        this._neighbors.push(glommed_neighbor);
+        });
+      this._neighbors = this._neighbors.concat*/
+    };
+
+    this.checkForGlomming = function(){
+      var neighbors = this.findActualNeighbors();
+      var d1 = this.getDisp();
+      neighbors.forEach(function(n){
+        var d2 = n.getDisp();
+        console.log(Phaser.Point.distance(d1,d2));
+        console.log(d1, d2);
+      }, this);
+
+    }
+    this.findActualNeighbors = function(){
+      var ret = [];
+      this._neighbors.forEach(function(n){
+        // n = puz.ultimateGlobule(n);
+        while(n.parent) // if it's absorbed, find the superglobule
+          n = n.parent;
+        if (ret.includes(n))
+          return;
+        if (n == this)
+          return;
+        ret.push(n);
+      }, this);
+      this._neighbors = ret;
+      return ret;
+    }
+
+    this.getDisp = function(){
+      var bounds = this.getBounds();
+      var should_be = bounds.topLeft;
+      var is = new Phaser.Point(this.cx, this.cy);
+      return Phaser.Point.subtract(is, should_be);
+      //bounds.topleft is where it "should be"
+      //glob.{cx,cy} is where it is.
+      //where it is minus where it should be is the displacement.
     };
 
     this.genSprite = function(puzzle){
-      borderDirection = [0,0,1,1];
+      var borderDirection = [0,0,1,1];
       //give it a random position on the canvas.
-      console.log(puzzle.game);
-      console.log(puzzle.game.rnd);
-      piece.cx = puzzle.game.rnd.between(100, puzzle.game.width-100);
-      piece.cy = puzzle.game.rnd.between(100, puzzle.game.height-100);
+      this.cx = puzzle.game.rnd.between(100, puzzle.game.width-100);
+      this.cy = puzzle.game.rnd.between(100, puzzle.game.height-100);
 
-      var piece_disp = new Phaser.Point((x) * this.apw, (y)*this.aph);
+      var bounds = this.getBounds();
+      var piece_disp = bounds.topLeft;
       var rel = function(pt){
         return Phaser.Point.subtract(pt, piece_disp);
       };
 
-      var bounds = this.getBounds();
-      console.log(JSON.stringify(bounds));
-      var piece_disp = bounds.topLeft;
       //var piece_canvas = new PIXI.CanvasBuffer(400,400);
       var piece_canvas = new PIXI.CanvasBuffer(bounds.width, bounds.height);
       var context = piece_canvas.context;
@@ -175,7 +222,7 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
           paths.reverse();
         paths.forEach(function(bezier){
           var bz = bezier.slice() // copy to perhaps reverse and make relative to piece buffer
-          for(j=0;j<4;j++)
+          for(var j=0;j<4;j++)
             bz[j] = Phaser.Point.subtract(bz[j], piece_disp);
           if (reversed)
             bz.reverse();
@@ -198,29 +245,32 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
       var tex = PIXI.Texture.fromCanvas(piece_canvas.canvas);
 
       //piece.sprite = this.game.add.sprite(piece.cx,piece.cy, screamer);
-      var sprite = puzzle.game.add.sprite(piece.cx,piece.cy, tex);
+      var sprite = puzzle.game.add.sprite(this.cx,this.cy, tex);
       sprite.inputEnabled = true;
       sprite.input.enableDrag();
       //sprite.input.boundsRect = puzzle.game.camera;
       sprite.input.pixelPerfectAlpha = 128;
       sprite.input.pixelPerfectClick = true;
       sprite.input.bringToTop = true;
+      var globbo = this;
+      sprite.events.onDragStop.add(function(item, pointer){
+        //console.log(puzzle, pointer, item);
+        //console.log(globbo);
+        //console.log(globbo.cx);
+        //console.log(item.x);
+        globbo.cx = item.x;
+        globbo.cy = item.y;
+        globbo.checkForGlomming();
+        //puz.checkForGlomming(globbo);
+
+      });
       this._sprite = sprite;
 
       return sprite;
     }
-
-    this.canvasBuffer = function(){
-
-    }
   }
 
   this.Globule.prototype = new this.Piece();
-
-  //todo: use this.
-  this.setPiece = function(x,y, piece){
-    this.pieces[y*ph + x] = piece;
-  }
 
   var piece_corners = [];
   for (var x=0; x<=this.pw; x++){
@@ -260,8 +310,11 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
     }
   }
 
+  this.glob_layout = [];
+
   //initialize puzzle by generating pieces.
   for (var x = 0; x < pw; x++){
+    this.glob_layout[x] = [];
     for (var y = 0; y < ph; y++){
       var borders = [
         horz_piece_borders[x][y],
@@ -270,10 +323,24 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
         vert_piece_borders[x][y]
       ];
       var s_piece = new this.SinglePiece(x,y,borders);
-      this.setPiece(x,y, s_piece);
 
-      var piece = new this.Globule(s_piece);
-      var sprite = piece.genSprite(this);
+      var glob = new this.Globule(s_piece);
+      this.glob_layout[x][y] = glob;
+      var sprite = glob.genSprite(this);
     }
   }
+  for (var x = 0; x < pw-1; x++){
+    for (var y = 0; y < ph; y++){
+      this.glob_layout[x][y]._neighbors.push( this.glob_layout[x+1][y] );
+      this.glob_layout[x+1][y]._neighbors.push( this.glob_layout[x][y] );
+    }
+  }
+  for (var x = 0; x < pw; x++){
+    for (var y = 0; y < ph-1; y++){
+      this.glob_layout[x][y]._neighbors.push( this.glob_layout[x][y+1] );
+      this.glob_layout[x][y+1]._neighbors.push( this.glob_layout[x][y] );
+    }
+  }
+
 };
+
