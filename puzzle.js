@@ -111,8 +111,8 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
 
   //different pieces glommed together (or just one piece) make a globule
   // extends piece.
-  this.Globule = function(piece){
-    this.pieces = [piece]; // single pieces
+  this.Globule = function(original_piece){
+    this.pieces = [original_piece]; // single pieces
     this.borders = [];
     this._neighbors = [];
 
@@ -126,7 +126,7 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
         this._border_instances[bd.id] += 1;
       }, this);
     };
-    this.incrementBorderInstances(piece.getBorders());
+    this.incrementBorderInstances(original_piece.getBorders());
 
     this.getBorders = function(){
       var ret = [];
@@ -199,7 +199,57 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
     };
 
     this.genSprite = function(){
-      var borderDirection = [0,0,1,1];
+      //var borderDirection = [0,0,1,1];
+      var borders = this.getBorders();
+
+      // need to find a route around the glob.
+      var bd_from_pt = {}; // look up borders from points
+      for (var bd in borders){ // vivify
+        bd_from_pt[borders[bd].corner1.id] = [];
+        bd_from_pt[borders[bd].corner2.id] = [];
+        borders[bd].flag_reverse = false;
+        borders[bd].flag_begin_path = false;
+        //borders[bd].corner1.flag_begin_path = false;
+        //borders[bd].corner2.flag_begin_path = false;
+      }
+      for (var bd in borders){
+        bd_from_pt[borders[bd].corner1.id].push(borders[bd]);
+        bd_from_pt[borders[bd].corner2.id].push(borders[bd]);
+      }
+      var route = [];
+      while(route.length < borders.length){
+        // get first border not in route.
+        var starting_border;
+        for (var i in borders){
+          var bd = borders[i];
+          if (! route.includes(bd)){
+            starting_border = bd;
+            break;
+          }
+        }
+        starting_border.flag_begin_path = true;
+        route.push(starting_border);
+        while(1){
+          var prev_bd = route[route.length-1]
+          var next_pt = prev_bd.corner2;
+          if (prev_bd.flag_reverse)
+            next_pt = prev_bd.corner1;
+          var next_bd = undefined; // jeez, no block scope in this language.
+          var next_bd_candidates = bd_from_pt[next_pt.id];
+          for (var i in next_bd_candidates){
+            if (route.includes(next_bd_candidates[i]))
+              continue;
+            next_bd = next_bd_candidates[i];
+            if (next_bd.point1 = next_pt)
+              next_bd.flag_reverse = true;
+            break;
+          }
+          if (! next_bd)
+            break; //completed a loop. there may be an internal loop or something.
+          route.push(next_bd);
+          console.log(route);
+        }
+      }
 
       var bounds = this.getBounds();
       var piece_disp = bounds.topLeft;
@@ -211,14 +261,11 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
       var piece_canvas = new PIXI.CanvasBuffer(bounds.width, bounds.height);
       var context = piece_canvas.context;
 
-      var borders = piece.getBorders();
-
       context.beginPath();
-      var movedTo = false;
-      for (var i = 0; i < borders.length; i++){ //draw the curve on the canvas
-        var bo = borders[i];
-        var reversed = borderDirection[i];
-        var paths = bo.getPaths().slice();
+      for (var i in route){ //draw the curve on the canvas
+        var bd = route [i];
+        var reversed = bd.flag_reverse;
+        var paths = bd.getPaths().slice();
         if(reversed)
           paths.reverse();
         paths.forEach(function(bezier){
@@ -227,9 +274,8 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
             bz[j] = Phaser.Point.subtract(bz[j], piece_disp);
           if (reversed)
             bz.reverse();
-          if (movedTo == false){
+          if (bd.flag_begin_path){
             context.moveTo(bz[0].x, bz[0].y);
-            movedTo = true;
           }
           context.bezierCurveTo(bz[1].x, bz[1].y, bz[2].x, bz[2].y, bz[3].x, bz[3].y);
         }, this);
@@ -241,7 +287,7 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
       context.fillStyle = pat;
       context.save()
       context.translate(-piece_disp.x, -piece_disp.y);
-      context.fill();
+      context.fill("evenodd");
       context.restore();
       var tex = PIXI.Texture.fromCanvas(piece_canvas.canvas);
 
@@ -273,6 +319,7 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
 
   this.Globule.prototype = new this.Piece();
 
+  var corner_ids = 0;
   var piece_corners = [];
   for (var x=0; x<=this.pw; x++){
     piece_corners.push([]);
@@ -280,6 +327,7 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
       var ix = this.apw * x;
       var iy = this.aph * y;
       piece_corners[x][y] = new Phaser.Point(ix,iy);
+      piece_corners[x][y].id = corner_ids++
     }
   }
   //console.log(piece_corners);
