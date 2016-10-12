@@ -141,22 +141,21 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
     this.glomGlobule = function(glob2){ // merge with another globule.
       this.incrementBorderInstances(glob2.getBorders()); // merge borders
       glob2.pieces.forEach(function(pc){ //push pieces
-        this.pieces.push(pieces);
+        this.pieces.push(pc);
       }, this);
       this._neighbors.push.apply(this._neighbors, glob2._neighbors);
       glob2.parent = this;
-      // globule.findActualNeighbors should hammer out dupes, etc.
-      /*
-      glob2._neighbors.forEach(function(n){
-        //puzzle.getGlobuleGlom() should be done on everything when glom checking after drag
-        var glommed_neighbor = puz.getGlobuleGlom(n);
-        if (glommed_neighbor = this)
-          return;
-        if (this._neighbors.includes(glommed_neighbor))
-          return;
-        this._neighbors.push(glommed_neighbor);
-        });
-      this._neighbors = this._neighbors.concat*/
+      var b1 = this.getBounds();
+      var b2 = glob2.getBounds();
+      var bu = Phaser.Rectangle.union(b1,b2);
+      if(bu.x < b1.x)
+        b1.cx -= b1.x - bu.x;
+      if(bu.y < b1.y)
+        b1.cy -= b1.y - bu.y;
+      this._sprite.destroy();
+      glob2._sprite.destroy();
+      this.genSprite();
+
     };
 
     this.checkForGlomming = function(){
@@ -164,8 +163,11 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
       var d1 = this.getDisp();
       neighbors.forEach(function(n){
         var d2 = n.getDisp();
-        console.log(Phaser.Point.distance(d1,d2));
-        console.log(d1, d2);
+        var dist = Phaser.Point.distance(d1,d2);
+        console.log(dist, d1, d2);
+        if (dist < 5)
+          this.glomGlobule(n);
+          //n.glomGlobule(this);
       }, this);
 
     }
@@ -195,11 +197,11 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
       //where it is minus where it should be is the displacement.
     };
 
-    this.genSprite = function(puzzle){
+    this.genSprite = function(){
       var borderDirection = [0,0,1,1];
       //give it a random position on the canvas.
-      this.cx = puzzle.game.rnd.between(100, puzzle.game.width-100);
-      this.cy = puzzle.game.rnd.between(100, puzzle.game.height-100);
+      this.cx = puz.game.rnd.between(100, puz.game.width-100);
+      this.cy = puz.game.rnd.between(100, puz.game.height-100);
 
       var bounds = this.getBounds();
       var piece_disp = bounds.topLeft;
@@ -245,7 +247,7 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
       var tex = PIXI.Texture.fromCanvas(piece_canvas.canvas);
 
       //piece.sprite = this.game.add.sprite(piece.cx,piece.cy, screamer);
-      var sprite = puzzle.game.add.sprite(this.cx,this.cy, tex);
+      var sprite = puz.game.add.sprite(this.cx,this.cy, tex);
       sprite.inputEnabled = true;
       sprite.input.enableDrag();
       //sprite.input.boundsRect = puzzle.game.camera;
