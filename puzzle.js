@@ -117,12 +117,13 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
     this._neighbors = [];
 
     //if the same border is contained twice then it's not drawn.
-    this.border_instances = {};
+    this._border_instances = {};
     this.incrementBorderInstances = function(borders){
       borders.forEach(function(bd){
-        if (! bd.id in this.border_instances)
-          this.border_instances[bd.id] = 0;
-        this.border_instances[bd.id]++;
+        //if (! bd.id in this._border_instances)
+        if (! this._border_instances.hasOwnProperty(bd.id))
+          this._border_instances[bd.id] = 0;
+        this._border_instances[bd.id] += 1;
       }, this);
     };
     this.incrementBorderInstances(piece.getBorders());
@@ -131,7 +132,7 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
       var ret = [];
       this.pieces.forEach(function(pc){
         pc.getBorders().forEach( function(bd){
-          if (this.border_instances[bd.id] = 1)
+          if (this._border_instances[bd.id] == 1)
             ret.push(bd);
         }, this);
       }, this);
@@ -164,7 +165,7 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
       neighbors.forEach(function(n){
         var d2 = n.getDisp();
         var dist = Phaser.Point.distance(d1,d2);
-        console.log(dist, d1, d2);
+        //console.log(dist, d1, d2);
         if (dist < 5)
           this.glomGlobule(n);
           //n.glomGlobule(this);
@@ -199,9 +200,6 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
 
     this.genSprite = function(){
       var borderDirection = [0,0,1,1];
-      //give it a random position on the canvas.
-      this.cx = puz.game.rnd.between(100, puz.game.width-100);
-      this.cy = puz.game.rnd.between(100, puz.game.height-100);
 
       var bounds = this.getBounds();
       var piece_disp = bounds.topLeft;
@@ -214,6 +212,7 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
       var context = piece_canvas.context;
 
       var borders = piece.getBorders();
+
       context.beginPath();
       var movedTo = false;
       for (var i = 0; i < borders.length; i++){ //draw the curve on the canvas
@@ -328,6 +327,9 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
 
       var glob = new this.Globule(s_piece);
       this.glob_layout[x][y] = glob;
+      //give it a random position on the canvas.
+      glob.cx = puz.game.rnd.between(100, puz.game.width-100);
+      glob.cy = puz.game.rnd.between(100, puz.game.height-100);
       var sprite = glob.genSprite(this);
     }
   }
