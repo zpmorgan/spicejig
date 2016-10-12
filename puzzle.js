@@ -1,6 +1,6 @@
-"use strict";
 
 var Puzzle = function(gaem, screamer, pw,ph, img){
+  "use strict";
   this.game = gaem;
   this.screamer = screamer;
   this.ph = ph; // pieces wide/high, e.g. 15, 12
@@ -44,9 +44,7 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
         });
       });
       return new Phaser.Rectangle(x1,y1, x2-x1, y2-y1);
-      return [new Phaser.Point(x1,y1), new Phaser.Point(x2,y2)];
-      return [x1,y1,x2,y2];
-    }
+    };
   };
   this.SinglePiece = function(px,py,borders){
     this.px = px;
@@ -55,14 +53,14 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
     this.getBorders = function(){
       return this.borders;
     };
-  }
+  };
   this.SinglePiece.prototype = new this.Piece();
 
   this.squiggle = function(){
     var A = new Phaser.Point(0,0);//start pt
     var AA = new Phaser.Point(0.2,0.1);//control pt
     var B = new Phaser.Point(1,0);
-    var BB = new Phaser.Point(0.8,-.1);
+    var BB = new Phaser.Point(0.8,-0.1);
     var midpoint = new Phaser.Point(0.5, 0);
     var nubpoint = new Phaser.Point(0.5, 0.2);
     var nub_A = new Phaser.Point(0.4, 0.2);
@@ -72,7 +70,7 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
       [nubpoint, nub_B, BB, B]];
     //console.log(JSON.stringify(bpaths));
     return bpaths;
-  }
+  };
   var _piece_border_id = 0;
   this.PieceBorder = function(corner1, corner2, straight_line){
     this.id = ++_piece_border_id;
@@ -82,7 +80,7 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
     this.getPaths = function(){ //not a copy so be careful
       if(this._paths)
         return this._paths;
-      if (straight_line == true){
+      if (straight_line === true){
         this._paths = [[corner1, corner1, corner2, corner2]];
         return this._paths;
       }
@@ -105,7 +103,7 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
       }
       this._paths = squig;
       return this._paths;
-    }
+    };
   };
 
   //different pieces glommed together (or just one piece) make a globule
@@ -131,7 +129,7 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
       var ret = [];
       this.pieces.forEach(function(pc){
         pc.getBorders().forEach( function(bd){
-          if (this._border_instances[bd.id] == 1)
+          if (this._border_instances[bd.id] === 1)
             ret.push(bd);
         }, this);
       }, this);
@@ -170,7 +168,7 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
           //n.glomGlobule(this);
       }, this);
 
-    }
+    };
     this.findActualNeighbors = function(){
       var ret = [];
       this._neighbors.forEach(function(n){
@@ -179,13 +177,13 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
           n = n.parent;
         if (ret.includes(n))
           return;
-        if (n == this)
+        if (n === this)
           return;
         ret.push(n);
       }, this);
       this._neighbors = ret;
       return ret;
-    }
+    };
 
     this.getDisp = function(){
       var bounds = this.getBounds();
@@ -203,13 +201,13 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
 
       // need to find a route around the glob.
       var bd_from_pt = {}; // look up borders from points
-      for (var bd in borders){ // vivify
+      for (var bd in borders){ // vivify & clear flags
         bd_from_pt[borders[bd].corner1.id] = [];
         bd_from_pt[borders[bd].corner2.id] = [];
         borders[bd].flag_reverse = false;
         borders[bd].flag_begin_path = false;
       }
-      for (var bd in borders){
+      for (bd in borders){
         bd_from_pt[borders[bd].corner1.id].push(borders[bd]);
         bd_from_pt[borders[bd].corner2.id].push(borders[bd]);
       }
@@ -227,17 +225,17 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
         starting_border.flag_begin_path = true;
         route.push(starting_border);
         while(1){
-          var prev_bd = route[route.length-1]
+          var prev_bd = route[route.length-1];
           var next_pt = prev_bd.corner2;
           if (prev_bd.flag_reverse)
             next_pt = prev_bd.corner1;
           var next_bd = undefined; // jeez, no block scope in this language.
           var next_bd_candidates = bd_from_pt[next_pt.id];
-          for (var i in next_bd_candidates){
+          for (i in next_bd_candidates){
             if (route.includes(next_bd_candidates[i]))
               continue;
             next_bd = next_bd_candidates[i];
-            if (next_bd.corner2 == next_pt)
+            if (next_bd.corner2 === next_pt)
               next_bd.flag_reverse = true;
             break;
           }
@@ -254,9 +252,6 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
 
       var bounds = this.getBounds();
       var piece_disp = bounds.topLeft;
-      var rel = function(pt){
-        return Phaser.Point.subtract(pt, piece_disp);
-      };
 
       //var piece_canvas = new PIXI.CanvasBuffer(400,400);
       var piece_canvas = new PIXI.CanvasBuffer(bounds.width, bounds.height);
@@ -269,8 +264,9 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
         var paths = bd.getPaths().slice();
         if(reversed)
           paths.reverse();
-        paths.forEach(function(bezier){
-          var bz = bezier.slice() // copy to perhaps reverse and make relative to piece buffer
+        for (var foo = 0; foo < paths.length; foo++){
+          var bezier = paths[foo];
+          var bz = bezier.slice(); // copy to perhaps reverse and make relative to piece buffer
           for(var j=0;j<4;j++)
             bz[j] = Phaser.Point.subtract(bz[j], piece_disp);
           if (reversed)
@@ -279,14 +275,14 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
             context.moveTo(bz[0].x, bz[0].y);
           }
           context.bezierCurveTo(bz[1].x, bz[1].y, bz[2].x, bz[2].y, bz[3].x, bz[3].y);
-        }, this);
+        };
       };
 
       //fill it in with the image
       var img=document.getElementById("scream");
       var pat = context.createPattern(img, "no-repeat");
       context.fillStyle = pat;
-      context.save()
+      context.save();
       context.translate(-piece_disp.x, -piece_disp.y);
       context.fill("evenodd");
       context.restore();
@@ -315,20 +311,21 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
       this._sprite = sprite;
 
       return sprite;
-    }
-  }
+    };
+  };
 
   this.Globule.prototype = new this.Piece();
 
   var corner_ids = 0;
   var piece_corners = [];
-  for (var x=0; x<=this.pw; x++){
+  var x,y;
+  for (x=0; x<=this.pw; x++){
     piece_corners.push([]);
-    for (var y=0; y<=this.ph; y++){
+    for (y=0; y<=this.ph; y++){
       var ix = this.apw * x;
       var iy = this.aph * y;
       piece_corners[x][y] = new Phaser.Point(ix,iy);
-      piece_corners[x][y].id = corner_ids++
+      piece_corners[x][y].id = corner_ids++;
     }
   }
   //console.log(piece_corners);
@@ -337,11 +334,11 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
   //generate borders between pieces and at the sides of the image.
   // horz first
   var horz_piece_borders = [];
-  for (var x = 0; x < this.pw; x++){
+  for (x = 0; x < this.pw; x++){
     horz_piece_borders.push([]);
-    for (var y = 0; y <= this.ph; y++){
+    for (y = 0; y <= this.ph; y++){
       var straight = false;
-      if (y==0 || y==this.ph)
+      if (y===0 || y===this.ph)
         straight = true;
       var pb = new this.PieceBorder(piece_corners[x][y], piece_corners[x+1][y], straight);
       horz_piece_borders[x][y] = pb;
@@ -349,11 +346,11 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
   }
   // now vertical piece borders.
   var vert_piece_borders = [];
-  for (var x = 0; x <= this.pw; x++){
+  for (x = 0; x <= this.pw; x++){
     vert_piece_borders.push([]);
-    for (var y = 0; y < this.ph; y++){
+    for (y = 0; y < this.ph; y++){
       var straight = false;
-      if (x==0 || x==this.pw)
+      if (x===0 || x===this.pw)
         straight = true;
       var pb = new this.PieceBorder(piece_corners[x][y], piece_corners[x][y+1], straight);
       vert_piece_borders[x][y] = pb;
@@ -363,9 +360,9 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
   this.glob_layout = [];
 
   //initialize puzzle by generating pieces.
-  for (var x = 0; x < pw; x++){
+  for (x = 0; x < pw; x++){
     this.glob_layout[x] = [];
-    for (var y = 0; y < ph; y++){
+    for (y = 0; y < ph; y++){
       var borders = [
         horz_piece_borders[x][y],
         vert_piece_borders[x+1][y],
@@ -379,17 +376,18 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
       //give it a random position on the canvas.
       glob.cx = puz.game.rnd.between(100, puz.game.width-100);
       glob.cy = puz.game.rnd.between(100, puz.game.height-100);
-      var sprite = glob.genSprite(this);
+      //var sprite = glob.genSprite(this);
+      glob.genSprite(this);
     }
   }
-  for (var x = 0; x < pw-1; x++){
-    for (var y = 0; y < ph; y++){
+  for (x = 0; x < pw-1; x++){
+    for (y = 0; y < ph; y++){
       this.glob_layout[x][y]._neighbors.push( this.glob_layout[x+1][y] );
       this.glob_layout[x+1][y]._neighbors.push( this.glob_layout[x][y] );
     }
   }
-  for (var x = 0; x < pw; x++){
-    for (var y = 0; y < ph-1; y++){
+  for (x = 0; x < pw; x++){
+    for (y = 0; y < ph-1; y++){
       this.glob_layout[x][y]._neighbors.push( this.glob_layout[x][y+1] );
       this.glob_layout[x][y+1]._neighbors.push( this.glob_layout[x][y] );
     }
