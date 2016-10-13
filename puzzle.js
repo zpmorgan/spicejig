@@ -103,7 +103,7 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
   this.SinglePiece.prototype = new this.Piece();
 
   this.squiggle = function(){
-    var p = 0.5
+    var p = 0.1
     var A = new Phaser.Point(0,0);//start pt
     var AA = new Phaser.Point(0.2,0).perturb(0,p);//control pt
     var B = new Phaser.Point(1,0);
@@ -112,8 +112,12 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
     var nubpoint = new Phaser.Point(midpoint.x, 0.2).perturb(0, p);
     var nub_A = new Phaser.Point(midpoint.x-0.1, 0.2);
     var nub_B = new Phaser.Point(midpoint.x+0.1, 0.2);
+    var nub_stalk_A = new Phaser.Point(nubpoint.x - 0.03, nubpoint.y / 2.5);
+    var nub_stalk_A_approach = new Phaser.Point(nub_stalk_A.x - 0.08, 0.05);
+    var nub_stalk_A_climb = new Phaser.Point(nub_stalk_A.x - 0.08, nubpoint.y);
     var bpaths = [
-      [A, AA, nub_A, nubpoint],
+      [A, AA, nub_stalk_A_approach, nub_stalk_A],
+      [nub_stalk_A, nub_stalk_A_climb, nub_A, nubpoint],
       [nubpoint, nub_B, BB, B]];
     //console.log(JSON.stringify(bpaths));
     return bpaths;
