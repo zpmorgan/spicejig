@@ -1,10 +1,5 @@
 var game;
 var puzzle;
-var pointsArray = [];
-var pointColors = ["0x00ff00", "0x008800", "0x880000", "0xff0000"];
-var bezierGraphics;
-var movingSprite;
-
 
 requirejs(['domReady', 'phaser', 'puzzle'], function(domReady){
   domReady(function() {
@@ -20,6 +15,7 @@ playGame.prototype = {
     game.load.image("scream", "scream.jpg");
 	},
 	create: function(){
+    game.canvas.oncontextmenu = function (e) { e.preventDefault(); }
     puzzle = new Puzzle(game, "scream", 3, 3);
   }
 }
