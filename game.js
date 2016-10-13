@@ -20,7 +20,7 @@ playGame.prototype = {
     game.load.image("scream", "scream.jpg");
 	},
 	create: function(){
-    puzzle = new Puzzle(game, "scream", 6, 6);
+    puzzle = new Puzzle(game, "scream", 3, 3);
   }
 }
 

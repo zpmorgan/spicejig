@@ -130,16 +130,22 @@ var Puzzle = function(gaem, img_key, pw,ph){
     return bpaths;
   };
   var _piece_border_id = 0;
-  this.PieceBorder = function(corner1, corner2, straight_line){
+  this.PieceBorder = function(p1, p2, straight_line){
     this.id = ++_piece_border_id;
-    this.corner2 = corner2;
-    this.corner1 = corner1;
+    // randomize direction.
+    if (puz.game.rnd.pick([true,false])){
+      this.corner2 = p2;
+      this.corner1 = p1;
+    }else{
+      this.corner1 = p2;
+      this.corner2 = p1;
+    }
 
     this.getPaths = function(){ //not a copy so be careful
       if(this._paths)
         return this._paths;
       if (straight_line === true){
-        this._paths = [[corner1, corner1, corner2, corner2]];
+        this._paths = [[this.corner1, this.corner1, this.corner2, this.corner2]];
         return this._paths;
       }
       //this._paths = this.squiggle(); // [[bz],[bz],...]
@@ -147,7 +153,7 @@ var Puzzle = function(gaem, img_key, pw,ph){
       var first_squig_point = squig[0][0];
       var last_squig_point = squig[squig.length-1][3];
       var squig_vector = Phaser.Point.subtract(last_squig_point, first_squig_point);
-      var border_vector = Phaser.Point.subtract(corner2, corner1);
+      var border_vector = Phaser.Point.subtract(this.corner2, this.corner1);
       var angle = Phaser.Point.angle(border_vector, squig_vector); //in radians
       //angle prolly pi/2 or 0;
       var scale = border_vector.getMagnitude() / squig_vector.getMagnitude();
@@ -156,7 +162,7 @@ var Puzzle = function(gaem, img_key, pw,ph){
           var p = Phaser.Point.subtract(squig[i][j], first_squig_point);//probably 0,0 anyways
           p.rotate(0,0,angle, false);
           p.multiply(scale, scale);
-          squig[i][j] = Phaser.Point.add(p, corner1);
+          squig[i][j] = Phaser.Point.add(p, this.corner1);
         }
       }
       this._paths = squig;
