@@ -103,22 +103,31 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
   this.SinglePiece.prototype = new this.Piece();
 
   this.squiggle = function(){
-    var p = 0.1
-    var A = new Phaser.Point(0,0);//start pt
-    var AA = new Phaser.Point(0.2,0).perturb(0,p);//control pt
-    var B = new Phaser.Point(1,0);
-    var BB = new Phaser.Point(0.8,0).perturb(0,p);
+    var p = 0.091;
     var midpoint = new Phaser.Point(0.5, 0).perturb(p,0);
     var nubpoint = new Phaser.Point(midpoint.x, 0.2).perturb(0, p);
-    var nub_A = new Phaser.Point(midpoint.x-0.1, 0.2);
-    var nub_B = new Phaser.Point(midpoint.x+0.1, 0.2);
-    var nub_stalk_A = new Phaser.Point(nubpoint.x - 0.03, nubpoint.y / 2.5);
-    var nub_stalk_A_approach = new Phaser.Point(nub_stalk_A.x - 0.08, 0.05);
-    var nub_stalk_A_climb = new Phaser.Point(nub_stalk_A.x - 0.08, nubpoint.y);
+    var nubpoint_slope = new Phaser.Point(0.19,0).perturb(p);
+    var stalk_offset = new Phaser.Point(-0.05, nubpoint.y * 0.15 );
+    var stalk_a = Phaser.Point.add(midpoint, stalk_offset);
+    stalk_offset.multiply(-1,1); //other side
+    var stalk_b = Phaser.Point.add(midpoint, stalk_offset);
+    //var stalk_a = new Phaser.Point(nubpoint.x-0.05, nubpoint.y/2.5);
+    var stalk_a_slope = new Phaser.Point(-0.00, nubpoint.y/3);
+    var stalk_b_slope = stalk_a_slope.clone().multiply(1,-1);
     var bpaths = [
-      [A, AA, nub_stalk_A_approach, nub_stalk_A],
+      [new Phaser.Point(0,0), new Phaser.Point(0.2,0).perturb(p),
+        Phaser.Point.subtract(stalk_a, stalk_a_slope), stalk_a],
+      [stalk_a, Phaser.Point.add(stalk_a, stalk_a_slope),
+        Phaser.Point.subtract(nubpoint, nubpoint_slope), nubpoint],
+      [nubpoint, Phaser.Point.add(nubpoint, nubpoint_slope),
+        Phaser.Point.subtract(stalk_b, stalk_b_slope), stalk_b],
+      [stalk_b, Phaser.Point.add(stalk_b, stalk_b_slope),
+        new Phaser.Point(0.8,0).perturb(p), new Phaser.Point(1,0)],
+      //[nubpoint, nubpoint, nubpoint, new Phaser.Point(1,0)],
+    ];
+      /*[A, AA, nub_stalk_A_approach, nub_stalk_A],
       [nub_stalk_A, nub_stalk_A_climb, nub_A, nubpoint],
-      [nubpoint, nub_B, BB, B]];
+      [nubpoint, nub_B, BB, B]];*/
     //console.log(JSON.stringify(bpaths));
     return bpaths;
   };
