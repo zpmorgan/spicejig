@@ -320,14 +320,20 @@ var Puzzle = function(gaem, img_key, pw,ph){
       //var piece_canvas = new PIXI.CanvasBuffer(400,400);
       var piece_canvas = new PIXI.CanvasBuffer(bounds.width, bounds.height);
       var context = piece_canvas.context;
+      var in_path = false;
 
-      context.beginPath();
       for (var i in route){ //draw the curve on the canvas
         var bd = route [i];
         var reversed = bd.flag_reverse;
         var paths = bd.getPaths().slice();
+
         if(reversed)
           paths.reverse();
+
+        var begin = false;
+        if (bd.flag_begin_path){
+          begin = true;
+        }
         for (var foo = 0; foo < paths.length; foo++){
           var bezier = paths[foo];
           var bz = bezier.slice(); // copy to perhaps reverse and make relative to piece buffer
@@ -335,12 +341,18 @@ var Puzzle = function(gaem, img_key, pw,ph){
             bz[j] = Phaser.Point.subtract(bz[j], piece_disp);
           if (reversed)
             bz.reverse();
-          if (bd.flag_begin_path){
+          if (foo == 0 && begin){
+            if (i > 0)
+              context.closePath(); // call this every time we need to jump
             context.moveTo(bz[0].x, bz[0].y);
+            if(i == 0) // first in route
+              context.beginPath();
           }
+
           context.bezierCurveTo(bz[1].x, bz[1].y, bz[2].x, bz[2].y, bz[3].x, bz[3].y);
         };
       };
+      //context.closePath();
 
       //fill it in with the image
       var img=puz.img;
