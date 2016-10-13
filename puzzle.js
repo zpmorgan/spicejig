@@ -79,14 +79,12 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
       var y2 = first_point.y;
       borders.forEach(function(bd){
         bd.getPaths().forEach(function(bz){
-          if(bz[0].x < x1) x1 = bz[0].x;
-          if(bz[3].x < x1) x1 = bz[3].x;
-          if(bz[0].x > x2) x2 = bz[0].x;
-          if(bz[3].x > x2) x2 = bz[3].x;
-          if(bz[0].y < y1) y1 = bz[0].y;
-          if(bz[3].y < y1) y1 = bz[3].y;
-          if(bz[0].y > y2) y2 = bz[0].y;
-          if(bz[3].y > y2) y2 = bz[3].y;
+          for (var i = 0;i<4;i++){
+            if(bz[i].x < x1) x1 = bz[i].x;
+            if(bz[i].y < y1) y1 = bz[i].y;
+            if(bz[i].x > x2) x2 = bz[i].x;
+            if(bz[i].y > y2) y2 = bz[i].y;
+          }
         });
       });
       return new Phaser.Rectangle(x1,y1, x2-x1, y2-y1);
