@@ -12,7 +12,7 @@ requirejs(['domReady', 'phaser', 'puzzle'], function(domReady){
 var playGame = function(game){}
 playGame.prototype = {
 	preload: function(){
-    game.load.image("scream", "scream.jpg");
+    game.load.image("scream", "images/scream.jpg");
 	},
 	create: function(){
     game.canvas.oncontextmenu = function (e) { e.preventDefault(); }
