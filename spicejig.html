@@ -1,15 +1,5 @@
 <!DOCTYPE HTML>
 <html>
-  <script>
-    window.onload = function() {
-      var c=document.getElementById("myCanvas");
-      var ctx=c.getContext("2d");
-      var img=document.getElementById("scream");
-      ctx.drawImage(img,10,10,150,180);
-      //jigPiece();
-      doStuff();
-    };
-  </script>
   <head>
 		<script data-main="game" src="require.js"></script>
     <style>
@@ -20,35 +10,5 @@
     </style>
   </head>
   <body>
-    <img id="scream" src="scream.jpg" alt="The Scream">
-    <canvas id="myCanvas" width="578" height="400"></canvas>
-    <script>
-      var canvas = document.getElementById('myCanvas');
-      var context = canvas.getContext('2d');
-
-      context.beginPath();
-      context.moveTo(188, 130);
-      context.bezierCurveTo(140, 10, 388, 10, 388, 170);
-      context.lineWidth = 10;
-
-      // line color
-      context.strokeStyle = 'black';
-      context.stroke();
-      function jigPiece(x,y){
-        context.beginPath();
-        context.moveTo(x,y);
-        context.bezierCurveTo(150,150,150,250,50,250);
-        context.bezierCurveTo(0,250,0,150,x,y);
-        var img=document.getElementById("scream");
-        var pat = context.createPattern(img, "no-repeat");
-        context.fillStyle = pat;
-        context.fill();
-        //context.stroke();
-      }
-      function doStuff(){
-        jigPiece(20,20);
-        jigPiece(480,480);
-      }
-    </script>
   </body>
 </html>

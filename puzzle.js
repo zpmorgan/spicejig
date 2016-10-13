@@ -23,9 +23,10 @@ function gaussian(mean, stdev) {
        }
 
        var retval = mean + stdev * y1;
+       return retval;/*
        if(retval > 0)
            return retval;
-       return -retval;
+       return -retval;*/
    }
 }
 // http://stackoverflow.com/questions/25582882/javascript-math-random-normal-distribution-gaussian-bell-curve
@@ -45,21 +46,20 @@ require(['phaser'], function(){
   };
 });
 
-var Puzzle = function(gaem, screamer, pw,ph, img){
+var Puzzle = function(gaem, img_key, pw,ph){
   "use strict";
   this.game = gaem;
-  this.screamer = screamer;
   this.ph = ph; // pieces wide/high, e.g. 15, 12
   this.pw = pw;
-  this.iw = 300; //image size. as in, of all the pieces put together.
-  this.ih = 300;
+  this.img = this.game.cache.getImage(img_key);
+  this.iw = this.img.width; //300; //image size. as in, of all the pieces put together.
+  this.ih = this.img.height;
   //cw, ch: size of canvas in pixels.
   //as in, the working area on which it's assembled by the player...
   this.cw = 400;
   this.ch = 400;
   this.apw = this.iw / pw; // average piece width. not counting protrusions into neighboring pieces.
   this.aph = this.ih / ph;
-  this.img = img;
   var puz = this;
 
   // nested class
@@ -337,7 +337,7 @@ var Puzzle = function(gaem, screamer, pw,ph, img){
       };
 
       //fill it in with the image
-      var img=document.getElementById("scream");
+      var img=puz.img;
       var pat = context.createPattern(img, "no-repeat");
       context.fillStyle = pat;
       context.save();
