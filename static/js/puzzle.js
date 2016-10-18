@@ -344,9 +344,9 @@ var Puzzle = function(gaem, img_key, pw,ph){
           if (foo == 0 && begin){
             if (i > 0)
               context.closePath(); // call this every time we need to jump
-            context.moveTo(bz[0].x, bz[0].y);
             if(i == 0) // first in route
               context.beginPath();
+            context.moveTo(bz[0].x, bz[0].y);
           }
 
           context.bezierCurveTo(bz[1].x, bz[1].y, bz[2].x, bz[2].y, bz[3].x, bz[3].y);
