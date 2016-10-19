@@ -4,15 +4,13 @@ var fs = require('fs');
 var request = require('request');
 var express = require('express');
 var app = express();
-app.use(express.static('static'));
+app.use(express.static(__dirname + '/static'));
 var redis = require("redis");
 var r_c = redis.createClient();
 
 app.get('/',function(req, res) {
-  console.log(req.query.blargles);
-  var ttt = false;
-  if (req.query.username === undefined) ttt = true;
-  res.json({query: ttt});
+  console.log(__dirname);
+  res.sendFile(__dirname + '/static/puzzle.html');
 });
 
 var Model = {};
