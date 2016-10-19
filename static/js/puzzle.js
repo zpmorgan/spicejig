@@ -374,6 +374,9 @@ var Puzzle = function(gaem, img_key, pw,ph){
       var pat = context.createPattern(img, "no-repeat");
       context.fillStyle = pat;
       context.fill("evenodd");
+      context.strokeStyle = "#111111";
+      context.lineWidth = 2;
+      context.stroke();
       context.restore();
       var tex = PIXI.Texture.fromCanvas(piece_canvas.canvas);
 
