@@ -3,7 +3,7 @@ var puzzle;
 
 requirejs(['domReady', 'phaser', 'puzzle'], function(domReady){
   domReady(function() {
-    game = new Phaser.Game(800, 500);
+    game = new Phaser.Game(window.innerWidth, window.innerHeight);
     game.state.add("PlayGame", playGame)
     game.state.add("Boot", boot)
     game.state.start("Boot");
@@ -54,7 +54,7 @@ playGame.prototype = {
     //game.load.image("scream", "images/scream.jpg");
     //game.load.start();
     //game.load.image('scream', spec.data.url);
-    puzzle = new Puzzle(game, "scream", 3, 3);
+    puzzle = new Puzzle(game, "scream", 7, 7);
   }
 }
 
