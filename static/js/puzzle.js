@@ -52,14 +52,25 @@ var Puzzle = function(gaem, img_key, pw,ph){
   this.ph = ph; // pieces wide/high, e.g. 15, 12
   this.pw = pw;
   this.img = this.game.cache.getImage(img_key);
-  this.iw = this.img.width; //300; //image size. as in, of all the pieces put together.
-  this.ih = this.img.height;
+  //this.iw = this.img.width; //300; //image size. as in, of all the pieces put together.
+  //this.ih = this.img.height;
+  this.orig_iw = this.img.width; //300; //image size. as in, of all the pieces put together.
+  this.orig_ih = this.img.height;
+  this.orig_area = this.orig_iw * this.orig_ih;
+  this.working_area = gaem.width * gaem.height;
+  this.target_area = this.working_area * 0.8;
+  // w*h * scale**2 = tw*th
+  // scale**2 = tw*th/(w*h)
+  // scale = sqrt(target_area / image_area)
+  this.img_scale = Math.sqrt(this.target_area / this.orig_area);
+  this.target_iw = this.orig_iw * this.img_scale;
+  this.target_ih = this.orig_ih * this.img_scale;
   //cw, ch: size of canvas in pixels.
   //as in, the working area on which it's assembled by the player...
   this.cw = 400;
   this.ch = 400;
-  this.apw = this.iw / pw; // average piece width. not counting protrusions into neighboring pieces.
-  this.aph = this.ih / ph;
+  this.apw = this.target_iw / pw; // average piece width. not counting protrusions into neighboring pieces.
+  this.aph = this.target_ih / ph;
   var puz = this;
 
   // nested class
@@ -356,10 +367,11 @@ var Puzzle = function(gaem, img_key, pw,ph){
 
       //fill it in with the image
       var img=puz.img;
-      var pat = context.createPattern(img, "no-repeat");
-      context.fillStyle = pat;
       context.save();
       context.translate(-piece_disp.x, -piece_disp.y);
+      context.scale(puz.img_scale, puz.img_scale);
+      var pat = context.createPattern(img, "no-repeat");
+      context.fillStyle = pat;
       context.fill("evenodd");
       context.restore();
       var tex = PIXI.Texture.fromCanvas(piece_canvas.canvas);

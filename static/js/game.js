@@ -54,7 +54,7 @@ playGame.prototype = {
     //game.load.image("scream", "images/scream.jpg");
     //game.load.start();
     //game.load.image('scream', spec.data.url);
-    puzzle = new Puzzle(game, "scream", 7, 7);
+    puzzle = new Puzzle(game, "scream", 8, 8);
   }
 }
 
