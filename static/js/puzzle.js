@@ -49,6 +49,7 @@ require(['phaser'], function(){
 var Puzzle = function(gaem, img_key, pw,ph){
   "use strict";
   this.game = gaem;
+  this.bg = game.add.tileSprite(0, 0, gaem.width, gaem.height, 'bg');
   this.ph = ph; // pieces wide/high, e.g. 15, 12
   this.pw = pw;
   this.img = this.game.cache.getImage(img_key);

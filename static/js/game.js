@@ -45,6 +45,7 @@ playGame.prototype = {
     //game.load.image("scream", "images/scream.jpg");
     var spec = game.cache.getJSON('spec');
     game.load.image('scream', '/t3/' + spec.data.id);
+    game.load.image('bg', '/images/bg.jpg');
     console.log('loading image ' + spec.data.id);
 	},
 	create: function(){
