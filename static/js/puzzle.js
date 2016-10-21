@@ -72,7 +72,9 @@ var Puzzle = function(gaem, img_key, pw,ph){
   this.ch = 400;
   this.apw = this.target_iw / pw; // average piece width. not counting protrusions into neighboring pieces.
   this.aph = this.target_ih / ph;
+
   var puz = this;
+  this.group = this.game.add.group(); //all the pieces are in a group behind some gui stuff.
 
   // nested class
   // px, py are col, row of the jigsaw cut.
@@ -380,8 +382,8 @@ var Puzzle = function(gaem, img_key, pw,ph){
       context.restore();
       var tex = PIXI.Texture.fromCanvas(piece_canvas.canvas);
 
-      //piece.sprite = this.game.add.sprite(piece.cx,piece.cy, screamer);
       var sprite = puz.game.add.sprite(this.cx,this.cy, tex);
+      puz.group.add(sprite);
       sprite.inputEnabled = true;
       sprite.input.enableDrag();
       //sprite.input.boundsRect = puzzle.game.camera;

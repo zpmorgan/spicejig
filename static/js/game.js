@@ -7,6 +7,17 @@ requirejs(['domReady', 'phaser', 'puzzle'], function(domReady){
     game.state.add("PlayGame", playGame)
     game.state.add("Boot", boot)
     game.state.start("Boot");
+    game.playPause = function(){
+      var audio = document.getElementById("musick");
+      if (audio.paused){
+        audio.play();
+        game.soundBtn.key = "pausebutton";
+        game.soundBtn.loadTexture("pausebutton", 0);
+      } else {
+        audio.pause();
+        game.soundBtn.loadTexture("playbutton", 0);
+      }
+    }
   });
 });
 
@@ -33,6 +44,8 @@ var boot = function(game){}
 boot.prototype = {
   preload: function(){
     game.load.json('spec', '/new_puz_spec');
+    game.load.image('playbutton', '/images/play.png');
+    game.load.image('pausebutton', '/images/pause.png');
   },
   create: () => {
     game.state.start('PlayGame');
@@ -45,17 +58,16 @@ playGame.prototype = {
     //game.load.image("scream", "images/scream.jpg");
     var spec = game.cache.getJSON('spec');
     game.load.image('scream', '/t3/' + spec.data.id);
+    //game.load.image("scream", "images/scream.jpg");
     game.load.image('bg', '/images/bg.jpg');
     console.log('loading image ' + spec.data.id);
 	},
 	create: function(){
     game.canvas.oncontextmenu = function (e) { e.preventDefault(); }
-    //game.load.image("scream", "images/scream.jpg");
-    //game.load.image('scream', '/t3/' + spec.data.id);
-    //game.load.image("scream", "images/scream.jpg");
-    //game.load.start();
-    //game.load.image('scream', spec.data.url);
     puzzle = new Puzzle(game, "scream", 8, 8);
+    game.soundBtn = this.add.button(20,20,'pausebutton', game.playPause, this,null,null,null);
+    game.soundBtn.width = 55;
+    game.soundBtn.height= 55;
   }
 }
 
