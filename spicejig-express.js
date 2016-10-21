@@ -16,7 +16,7 @@ app.get('/',function(req, res) {
 var Model = {};
 
 Model.rand_reddit_thing = () => { //return a promise
-  var url = "https://www.reddit.com/r/ImaginaryBestOf/.json";
+  var url = "https://www.reddit.com/r/ImaginaryBestOf/top.json?limit=25&sort=top&t=all";
   var p = new Promise(function(resolve,reject){
     request(url, function(err,scrape_res, res_json){
       if(err) { res.json("blehblah "+ err.code); return;}
