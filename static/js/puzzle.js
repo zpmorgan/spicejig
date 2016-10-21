@@ -46,26 +46,31 @@ require(['phaser'], function(){
   };
 });
 
-var Puzzle = function(gaem, img_key, pw,ph){
+var Puzzle = function(gaem, img_key, target_num_pieces){ // pw,ph){
   "use strict";
   this.game = gaem;
   this.bg = game.add.tileSprite(0, 0, gaem.width, gaem.height, 'bg');
+  this.img = this.game.cache.getImage(img_key);
+
+  var orig_iw = this.img.width; //300; //image size. as in, of all the pieces put together.
+  var orig_ih = this.img.height;
+  var aspect_ratio = orig_iw / orig_ih;
+  var pw = Math.round(Math.sqrt(target_num_pieces) * aspect_ratio);
+  var ph = Math.round(Math.sqrt(target_num_pieces) / aspect_ratio);
+  console.log(pw + 'x' + ph + '=' + pw*ph);
+
   this.ph = ph; // pieces wide/high, e.g. 15, 12
   this.pw = pw;
-  this.img = this.game.cache.getImage(img_key);
-  //this.iw = this.img.width; //300; //image size. as in, of all the pieces put together.
-  //this.ih = this.img.height;
-  this.orig_iw = this.img.width; //300; //image size. as in, of all the pieces put together.
-  this.orig_ih = this.img.height;
-  this.orig_area = this.orig_iw * this.orig_ih;
+
+  var orig_area = orig_iw * orig_ih;
   this.working_area = gaem.width * gaem.height;
   this.target_area = this.working_area * 0.8;
   // w*h * scale**2 = tw*th
   // scale**2 = tw*th/(w*h)
   // scale = sqrt(target_area / image_area)
-  this.img_scale = Math.sqrt(this.target_area / this.orig_area);
-  this.target_iw = this.orig_iw * this.img_scale;
-  this.target_ih = this.orig_ih * this.img_scale;
+  this.img_scale = Math.sqrt(this.target_area / orig_area);
+  this.target_iw = orig_iw * this.img_scale;
+  this.target_ih = orig_ih * this.img_scale;
   //cw, ch: size of canvas in pixels.
   //as in, the working area on which it's assembled by the player...
   this.cw = 400;

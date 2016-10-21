@@ -64,7 +64,7 @@ playGame.prototype = {
 	},
 	create: function(){
     game.canvas.oncontextmenu = function (e) { e.preventDefault(); }
-    puzzle = new Puzzle(game, "scream", 8, 8);
+    puzzle = new Puzzle(game, "scream", 100);
     game.soundBtn = this.add.button(20,20,'pausebutton', game.playPause, this,null,null,null);
     game.soundBtn.width = 55;
     game.soundBtn.height= 55;
