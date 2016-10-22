@@ -2,12 +2,17 @@
 <html>
   <head>
 		<script data-main="js/game" src="js/require.js"></script>
+    <title>{{title}}</title>
     <style>
       body {
         margin: 0px;
         padding: 0px;
       }
     </style>
+    <script> //global stuff G
+      var G = {};
+      G.spec = {{&spec}};
+    </script>
   </head>
   <body>
     <audio autoplay id="musick">

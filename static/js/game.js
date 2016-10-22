@@ -1,6 +1,10 @@
 var game;
 var puzzle;
 
+//maybe the spec is supplied directly
+//or maybe we have to source it from /new_puz_spec
+var source_json = G.spec.source ? true : false;
+
 requirejs(['domReady', 'phaser', 'puzzle'], function(domReady){
   domReady(function() {
     game = new Phaser.Game(window.innerWidth, window.innerHeight);
@@ -17,6 +21,11 @@ requirejs(['domReady', 'phaser', 'puzzle'], function(domReady){
         audio.pause();
         game.soundBtn.loadTexture("playbutton", 0);
       }
+    }
+    game.getSpec = function(){
+      if (source_json == false)
+        return G.spec;
+      return game.cache.getJSON('spec');
     }
   });
 });
@@ -41,9 +50,11 @@ function loadJSON(path, success, error)
 }
 
 var boot = function(game){}
+
 boot.prototype = {
   preload: function(){
-    game.load.json('spec', '/new_puz_spec');
+    if (source_json)
+      game.load.json('spec', '/new_puz_spec');
     game.load.image('playbutton', '/images/play.png');
     game.load.image('pausebutton', '/images/pause.png');
     game.load.audio('victorysound', '/victory.mp3');
@@ -58,9 +69,12 @@ var playGame = function(game){}
 playGame.prototype = {
 	preload: function(){
     //game.load.image("scream", "images/scream.jpg");
-    var spec = game.cache.getJSON('spec');
-    game.load.image('scream', '/t3/' + spec.data.id);
-    //game.load.image("scream", "images/scream.jpg");
+    var spec = game.getSpec();
+    if (spec.img_src == "reddit")
+      game.load.image('scream', '/t3/' + spec.data.id);
+    else if (spec.img_src == "scream")
+      game.load.image("scream", "images/scream.jpg");
+    //else if (spec.img_src == "blank")
     game.load.image('bg', '/images/bg.jpg');
 
     game.fin = function(){

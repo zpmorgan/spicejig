@@ -8,9 +8,38 @@ app.use(express.static(__dirname + '/static'));
 var redis = require("redis");
 var r_c = redis.createClient();
 
+var mustacheExpress = require('mustache-express');
+app.engine('must', mustacheExpress());
+app.set('view engine', 'mustache');
+app.set('views', __dirname + '/views');
+
 app.get('/',function(req, res) {
   console.log(__dirname);
-  res.sendFile(__dirname + '/static/puzzle.html');
+  //res.sendFile(__dirname + '/static/puzzle.html');
+  var spec = {source : "random"};
+  res.render('puzzle.must', {title:'Jigsaw', spec: JSON.stringify(spec)});
+});
+
+//geometryitudeificatoralizor
+//squarifaciareifier
+//squaritudeifier
+//squaritizationalizor
+//geomitificilator
+//squeerifier.squeerify
+//tileosqueequalizer
+//geomosquaralizor.geomosquaralize()
+app.get('/blank', (req,res) => {
+  var spec = {
+    img_src: 'solidcolor',
+    w: 100,
+    h: 100,
+    pieces: 100,
+  };
+  res.render('puzzle.must', {title:'Blank Jigsaw', spec: JSON.stringify(spec)});
+});
+app.get('/scream', (req,res) => {
+  var spec = {img_src : "scream"};
+  res.render('puzzle.must', {title:'Blank Jigsaw', spec: JSON.stringify(spec)});
 });
 
 var Model = {};
@@ -28,6 +57,7 @@ Model.rand_reddit_thing = () => { //return a promise
       nothings = things.filter(function(t){return ! t.data.url.match(jpg_regex)});
       things = things.filter(function(t){return t.data.url.match(jpg_regex)});
       var thing = things[Math.floor(Math.random()*things.length)];
+      thing.img_src = "reddit";
       r_c.hset('t3', thing.data.id, JSON.stringify(thing));
       resolve(thing);
     });
