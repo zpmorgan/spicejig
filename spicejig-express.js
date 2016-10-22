@@ -37,6 +37,8 @@ app.get('/blank', (req,res) => {
     h: 100,
     pieces: 100,
   };
+  if(req.query.pieces)
+    spec.pieces = req.query.pieces;
   res.render('puzzle.must', {title:'Blank Jigsaw', spec: JSON.stringify(spec)});
 });
 app.get('/scream', (req,res) => {

@@ -377,13 +377,19 @@ var Puzzle = function(gaem, fin_cb, img_key, target_num_pieces){ // pw,ph){
       };
       //context.closePath();
 
-      //fill it in with the image
-      var img=puz.img;
+      //fill it in with the image or color
       context.save();
-      context.translate(-piece_disp.x, -piece_disp.y);
-      context.scale(puz.img_scale, puz.img_scale);
-      var pat = context.createPattern(img, "no-repeat");
-      context.fillStyle = pat;
+
+      var spec = puz.game.getSpec();
+      if (spec.img_from == "solidcolor"){
+        context.fillStyle = "white";
+      } else {
+        var img=puz.img;
+        context.translate(-piece_disp.x, -piece_disp.y);
+        context.scale(puz.img_scale, puz.img_scale);
+        var pat = context.createPattern(img, "no-repeat");
+        context.fillStyle = pat;
+      }
       context.fill("evenodd");
       context.strokeStyle = "#111111";
       context.lineWidth = 2;

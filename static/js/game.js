@@ -78,7 +78,8 @@ playGame.prototype = {
       game.load.image('scream', '/t3/' + spec.data.id);
     else if (spec.img_from == "scream")
       game.load.image("scream", "images/scream.jpg");
-    //else if (spec.img_from == "blank")
+    else if (spec.img_from == "solidcolor"){
+    }
     game.load.image('bg', '/images/bg.jpg');
 
     game.fin = function(){
