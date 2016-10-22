@@ -46,9 +46,10 @@ require(['phaser'], function(){
   };
 });
 
-var Puzzle = function(gaem, img_key, target_num_pieces){ // pw,ph){
+var Puzzle = function(gaem, fin_cb, img_key, target_num_pieces){ // pw,ph){
   "use strict";
   this.game = gaem;
+  this.fin_cb= fin_cb;
   this.bg = game.add.tileSprite(0, 0, gaem.width, gaem.height, 'bg');
   this.img = this.game.cache.getImage(img_key);
 
@@ -80,6 +81,7 @@ var Puzzle = function(gaem, img_key, target_num_pieces){ // pw,ph){
 
   var puz = this;
   this.group = this.game.add.group(); //all the pieces are in a group behind some gui stuff.
+  this.n_globs = 0;
 
   // nested class
   // px, py are col, row of the jigsaw cut.
@@ -237,7 +239,9 @@ var Puzzle = function(gaem, img_key, target_num_pieces){ // pw,ph){
       this._sprite.destroy();
       glob2._sprite.destroy();
       this.genSprite();
-
+      puz.n_globs--;
+      if (puz.n_globs == 1) //victory, whoop de doo!
+        puz.fin_cb();
     };
 
     this.checkForGlomming = function(){
@@ -471,6 +475,7 @@ var Puzzle = function(gaem, img_key, target_num_pieces){ // pw,ph){
       var s_piece = new this.SinglePiece(x,y,borders);
 
       var glob = new this.Globule(s_piece);
+      puz.n_globs++;
       this.glob_layout[x][y] = glob;
       //give it a random position on the canvas.
       glob.cx = puz.game.rnd.between(100, puz.game.width-100);

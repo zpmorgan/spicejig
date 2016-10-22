@@ -46,11 +46,13 @@ boot.prototype = {
     game.load.json('spec', '/new_puz_spec');
     game.load.image('playbutton', '/images/play.png');
     game.load.image('pausebutton', '/images/pause.png');
+    game.load.audio('victorysound', '/victory.mp3');
   },
   create: () => {
     game.state.start('PlayGame');
   }
 };
+
 
 var playGame = function(game){}
 playGame.prototype = {
@@ -60,11 +62,15 @@ playGame.prototype = {
     game.load.image('scream', '/t3/' + spec.data.id);
     //game.load.image("scream", "images/scream.jpg");
     game.load.image('bg', '/images/bg.jpg');
-    console.log('loading image ' + spec.data.id);
+
+    game.fin = function(){
+      game.sound.play('victorysound');
+      console.log('fin');
+    };
 	},
 	create: function(){
     game.canvas.oncontextmenu = function (e) { e.preventDefault(); }
-    puzzle = new Puzzle(game, "scream", 100);
+    puzzle = new Puzzle(game, game.fin, "scream", 80);
     game.soundBtn = this.add.button(20,20,'pausebutton', game.playPause, this,null,null,null);
     game.soundBtn.width = 55;
     game.soundBtn.height= 55;
