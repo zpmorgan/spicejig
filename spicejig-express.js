@@ -17,6 +17,8 @@ app.get('/',function(req, res) {
   console.log(__dirname);
   //res.sendFile(__dirname + '/static/puzzle.html');
   var spec = {source : "random"};
+  if(req.query.pieces)
+    spec.pieces = req.query.pieces;
   res.render('puzzle.must', {title:'Jigsaw', spec: JSON.stringify(spec)});
 });
 
@@ -30,7 +32,7 @@ app.get('/',function(req, res) {
 //geomosquaralizor.geomosquaralize()
 app.get('/blank', (req,res) => {
   var spec = {
-    img_src: 'solidcolor',
+    img_from: 'solidcolor',
     w: 100,
     h: 100,
     pieces: 100,
@@ -38,7 +40,9 @@ app.get('/blank', (req,res) => {
   res.render('puzzle.must', {title:'Blank Jigsaw', spec: JSON.stringify(spec)});
 });
 app.get('/scream', (req,res) => {
-  var spec = {img_src : "scream"};
+  var spec = {img_from: "scream"};
+  if(req.query.pieces)
+    spec.pieces = req.query.pieces;
   res.render('puzzle.must', {title:'Blank Jigsaw', spec: JSON.stringify(spec)});
 });
 
@@ -57,7 +61,7 @@ Model.rand_reddit_thing = () => { //return a promise
       nothings = things.filter(function(t){return ! t.data.url.match(jpg_regex)});
       things = things.filter(function(t){return t.data.url.match(jpg_regex)});
       var thing = things[Math.floor(Math.random()*things.length)];
-      thing.img_src = "reddit";
+      thing.img_from = "reddit";
       r_c.hset('t3', thing.data.id, JSON.stringify(thing));
       resolve(thing);
     });
