@@ -250,7 +250,7 @@ var Puzzle = function(gaem, fin_cb, img_key, target_num_pieces){ // pw,ph){
       neighbors.forEach(function(n){
         var d2 = n.getDisp();
         var dist = Phaser.Point.distance(d1,d2);
-        if (dist < 5)
+        if (dist < (5 * game.width / 800))
           this.glomGlobule(n);
           //n.glomGlobule(this);
       }, this);
