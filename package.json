@@ -10,8 +10,10 @@
   "license": "MIT",
   "dependencies": {
     "express": "*",
+    "express-session": "^1.14.1",
     "mustache-express": "^1.2.2",
     "redis": "*",
-    "request": "*"
+    "request": "*",
+    "session-file-store": "^0.2.2"
   }
 }

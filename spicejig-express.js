@@ -8,13 +8,21 @@ app.use(express.static(__dirname + '/static'));
 var redis = require("redis");
 var r_c = redis.createClient();
 
+var session = require('express-session');
+var FileStore = require('session-file-store')(session);
+app.use(session({
+  store: new FileStore,
+  secret: 'lkasjdhfgkjlhafdgiludfha98fha98hf9agh',
+  resave: true,
+  saveUninitialized: true
+}));
+
 var mustacheExpress = require('mustache-express');
 app.engine('must', mustacheExpress());
 app.set('view engine', 'mustache');
 app.set('views', __dirname + '/views');
 
 app.get('/',function(req, res) {
-  console.log(__dirname);
   //res.sendFile(__dirname + '/static/puzzle.html');
   var spec = {source : "random"};
   if(req.query.pieces)
@@ -31,6 +39,8 @@ app.get('/',function(req, res) {
 //tileosqueequalizer
 //geomosquaralizor.geomosquaralize()
 app.get('/blank', (req,res) => {
+  console.log(req.session.id);
+  req.session.blargles = 'foo';
   var spec = {
     img_from: 'solidcolor',
     w: 100,
