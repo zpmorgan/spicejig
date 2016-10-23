@@ -379,6 +379,7 @@ var Puzzle = function(gaem, fin_cb, img_key, target_num_pieces){ // pw,ph){
 
       //fill it in with the image or color
       context.save();
+      context.lineWidth = 1.3 * (game.width / 800);
 
       var spec = puz.game.getSpec();
       if (spec.img_from == "solidcolor"){
@@ -387,16 +388,16 @@ var Puzzle = function(gaem, fin_cb, img_key, target_num_pieces){ // pw,ph){
         var img=puz.img;
         context.translate(-piece_disp.x, -piece_disp.y);
         context.scale(puz.img_scale, puz.img_scale);
+        context.lineWidth /= puz.img_scale;
         var pat = context.createPattern(img, "no-repeat");
         context.fillStyle = pat;
       }
       context.fill("evenodd");
       context.strokeStyle = "#111111";
-      context.lineWidth = 2;
       context.stroke();
       context.restore();
-      var tex = PIXI.Texture.fromCanvas(piece_canvas.canvas);
 
+      var tex = PIXI.Texture.fromCanvas(piece_canvas.canvas);
       var sprite = puz.game.add.sprite(this.cx,this.cy, tex);
       puz.group.add(sprite);
       sprite.inputEnabled = true;
