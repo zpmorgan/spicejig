@@ -1,12 +1,9 @@
 //var http = require("http");
 //var cheerio = require('cheerio');
-var fs = require('fs');
 var request = require('request');
 var express = require('express');
 var app = express();
 app.use(express.static(__dirname + '/static'));
-var redis = require("redis");
-var r_c = redis.createClient();
 
 var session = require('express-session');
 var FileStore = require('session-file-store')(session);
@@ -17,10 +14,23 @@ app.use(session({
   saveUninitialized: true
 }));
 
+var Model = require('./model');
+
 var mustacheExpress = require('mustache-express');
 app.engine('must', mustacheExpress());
 app.set('view engine', 'mustache');
 app.set('views', __dirname + '/views');
+
+//middleware?
+//fetch user from model, store it in req.user
+var userify = function(req,res,next){
+  Model.get_user_from_session_id(req.session.id).then( (user) => {
+    req.user = user;
+    req.session.userid = user.id;
+    console.log("user " + user.id + ' connected.  sessid: '+ req.session.id);
+    next();
+  });
+};
 
 app.get('/',function(req, res) {
   //res.sendFile(__dirname + '/static/puzzle.html');
@@ -55,80 +65,14 @@ app.get('/scream', (req,res) => {
   var spec = {img_from: "scream"};
   if(req.query.pieces)
     spec.pieces = req.query.pieces;
-  res.render('puzzle.must', {title:'Blank Jigsaw', spec: JSON.stringify(spec)});
+  res.render('puzzle.must', {title:'😱 😱 😱 😱 😱', spec: JSON.stringify(spec)});
 });
 
-var Model = {};
-
-Model.rand_reddit_thing = () => { //return a promise
-  var url = "https://www.reddit.com/r/ImaginaryBestOf/top.json?limit=25&sort=top&t=all";
-  var p = new Promise(function(resolve,reject){
-    request(url, function(err,scrape_res, res_json){
-      if(err) { res.json("blehblah "+ err.code); return;}
-      if (scrape_res.statusCode !== 200) { res.json("code "+ scrape_res.statusCode); return;}
-      var res_parsed = JSON.parse(res_json);
-      if(res_parsed.kind !== "Listing") { res.json(res_parsed.kind); return;}
-      var things = res_parsed.data.children;
-      jpg_regex = /\.jpe?g(\?.*)?$/;
-      nothings = things.filter(function(t){return ! t.data.url.match(jpg_regex)});
-      things = things.filter(function(t){return t.data.url.match(jpg_regex)});
-      var thing = things[Math.floor(Math.random()*things.length)];
-      thing.img_from = "reddit";
-      r_c.hset('t3', thing.data.id, JSON.stringify(thing));
-      resolve(thing);
-    });
-  });
-  return p;
-}
 app.get('/scrapejson', function(req,res){
-  model.rand_reddit_thing().then(function(thing){
+  Model.rand_reddit_thing().then(function(thing){
     res.json(thing);
   });
 });
-
-Model.t3_from_db = (thing_id) => { //return a promise.
-  var p = new Promise( (resolve,rej) => {
-    r_c.hget('t3', thing_id, (err, result) => {
-      if (!result){
-        rej(thing_id + " not found as a t3 in redis");
-      }
-      else {
-        var thing = JSON.parse(result);
-        resolve(thing);
-      }
-    });
-  });
-  return p;
-};
-Model.t3_img_path_when_ready = (t3_id) => {
-  var img_dir = "/tmp/";
-  var filename = t3_id + '.jpg';
-  var fspath = img_dir + filename;
-  var p = new Promise( (resolve,rej) => {
-    fs.access(fspath, fs.constants.R_OK, (err) => {
-      if(!err){
-        resolve(fspath);
-        return;
-      }
-      Model.t3_from_db(t3_id).then( (thing) => {
-        // get the json for the thing from redis
-        // and download the actual jpg
-        request
-          .get(thing.data.url)
-          .pipe(fs.createWriteStream(fspath))
-          .on('finish', () => {
-            resolve(fspath);
-            //res.sendFile(fspath);
-          })
-          .on('error', function(err) {
-               console.log(err)
-          });
-      });
-    });
-    //resolve('/foo');
-  });
-  return p;
-};
 
 app.get('/t3/:t3id', (req,res) => {
   var img_dir = "/tmp/";
@@ -189,21 +133,27 @@ app.get('/scrape', function(req,res){
     res.json(entries[0].attr('data-url'));
   });
 });
-app.get('/new_puz_spec', function(req,res){
+app.get('/new_puz_spec', userify, function(req,res){
   var p = new Promise( (resolve,reject) => {
     Model.rand_reddit_thing().then( (tng) => {
-      r_c.hget ('t3',tng.data.id, (err, cached_tng) => {
-        //console.log(err, cached_tng);
-        if (cached_tng){
-          resolve(JSON.parse(cached_tng));
-        } else {
-          //console.log(JSON.stringify(tng));
-          resolve(tng);
-        }
-      });
+      resolve(tng);
     });
   });
   p.then( (tng) => {res.json(tng)}).catch((err) => {console.log(err)});;
+});
+
+app.get('/fin/:t3id', userify, (req,res) => {
+  req.user.fin_t3(req.params.t3id).then( fins => {
+    console.log ( 'user '+req.user.id+ ' fin\'d puzzle '+req.params.t3id);
+    res.json({ //success
+      fins: fins,
+      ok : 'ok'});
+  }, reason => { //fail
+    res.json({
+      ok: 'not really',
+      reason: reason
+    });
+  });
 });
 
 app.listen(8888);

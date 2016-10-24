@@ -9,10 +9,6 @@
   "execMap": {
     "js": "node --harmony"
   },
-  "watch": [
-    "test/fixtures/",
-    "test/samples/"
-  ],
   "env": {
     "NODE_ENV": "development"
   },

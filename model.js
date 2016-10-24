@@ -1,8 +1,13 @@
 var request = require('request');
 var redis = require("redis");
 var r_c = redis.createClient();
+var fs = require('fs');
 
-exports.rand_reddit_thing = () => { //return a promise
+var Model = {};
+module.exports = Model;
+
+
+Model.rand_reddit_thing = () => { //return a promise
   var url = "https://www.reddit.com/r/ImaginaryBestOf/top.json?limit=25&sort=top&t=all";
   var p = new Promise(function(resolve,reject){
     request(url, function(err,scrape_res, res_json){
@@ -24,7 +29,7 @@ exports.rand_reddit_thing = () => { //return a promise
 }
 
 
-exports.t3_from_db = (thing_id) => { //return a promise.
+Model.t3_from_db = (thing_id) => { //return a promise.
   var p = new Promise( (resolve,rej) => {
     r_c.hget('t3', thing_id, (err, result) => {
       if (!result){
@@ -38,7 +43,7 @@ exports.t3_from_db = (thing_id) => { //return a promise.
   });
   return p;
 };
-exports.t3_img_path_when_ready = (t3_id) => {
+Model.t3_img_path_when_ready = (t3_id) => {
   var img_dir = "/tmp/";
   var filename = t3_id + '.jpg';
   var fspath = img_dir + filename;
@@ -67,5 +72,96 @@ exports.t3_img_path_when_ready = (t3_id) => {
   });
   return p;
 };
+Model.user_from_json = json_stuff => {
+  stuff = JSON.parse(json_stuff);
+  var u = new Model.User();
+  u.id = stuff.id
+  return u;
+}
+Model.User = function(){
+  // get a list of all the finished t3's
+  this.get_fin = () => {
+    return new Promise( (resolve, rej) => {
+      console.log(this.id);
+      r_c.hget('fin_by_user', this.id, (err,res) => {
+        console.log(err,res,'asdf');
+        if (res === null)
+          res = "{}";
+        resolve(JSON.parse(res));
+      });
+    });
+  }
+  // fin_hash: {t3id : true,...} or {t3id:epochtime,...}
+  this.set_fin = (fin_hash) => {
+    return new Promise( (reso,rej) => {
+      r_c.hset('fin_by_user', this.id, JSON.stringify(fin_hash));
+      reso();
+    });
+  };
 
+  //mark a t3 as finished by this user.
+  //returns the same thing as user.get_fin
+  this.fin_t3 = (t3id, val) => {
+    if (val === undefined)
+      val = true;
+    return new Promise( (resolve,rej) => {
+      this.get_fin().then( fins=>{
+        fins[t3id] = val;
+        this.set_fin(fins).then( () => {
+          resolve(fins);
+        });
+      });
+    });
+  };
+};
+Model.User.prototype.fin = asdf=>{};
+
+if(false)
+['log', 'warn'].forEach(function(method) {
+  var old = console[method];
+  console[method] = function() {
+    var stack = (new Error()).stack.split(/\n/);
+    // Chrome includes a single "Error" line, FF doesn't.
+    if (stack[0].indexOf('Error') === 0) {
+      stack = stack.slice(1);
+    }
+    var args = [].slice.apply(arguments).concat([stack[1].trim()]);
+    return old.apply(console, args);
+  };
+});
+
+Model.get_user = (userid) => {
+  return new Promise( (resolve,reject) => {
+    r_c.hget('user',userid, function(err,user_json){
+      resolve(Model.user_from_json(user_json));
+    });
+  });
+};
+
+Model.gen_new_user = function(){
+  return new Promise( (resolve,reject) => {
+    r_c.incr('next_userid', function(err,nextid){
+      if(err)
+        reject(err);
+      var user = {id : nextid};
+      r_c.hset('user', nextid, JSON.stringify(user));
+      resolve(user);
+    });
+  });
+}
+
+// generate a new user if one doesn't exist
+Model.get_user_from_session_id = function(sessid){
+  return new Promise( (resolve, reject) => {
+    r_c.hget('sess_userid', sessid, (err,userid) => {
+      if(userid === null)
+        Model.gen_new_user().then( (user) => {
+          r_c.hset('sess_userid', sessid, user.id);
+          resolve(user);
+          return;
+        });
+      else Model.get_user(userid).then( (user) => {resolve(user)});
+    });
+  });
+};
 
