@@ -9,7 +9,8 @@ app.use(session({
   store: new FileStore,
   secret: 'lkasjdhfgkjlhafdgiludfha98fha98hf9agh',
   resave: true,
-  saveUninitialized: true
+  saveUninitialized: true,
+  path : __dirname + '/sessions'
 }));
 
 var Model = require('./model');
