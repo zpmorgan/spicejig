@@ -30,7 +30,7 @@ var userify = function(req,res,next){
   });
 };
 
-app.get('/',function(req, res) {
+app.get('/',userify, function(req, res) {
   //res.sendFile(__dirname + '/static/puzzle.html');
   var spec = {source : "random"};
   if(req.query.pieces)
