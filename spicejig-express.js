@@ -6,11 +6,10 @@ app.use(express.static(__dirname + '/static'));
 var session = require('express-session');
 var FileStore = require('session-file-store')(session);
 app.use(session({
-  store: new FileStore,
+  store: new FileStore({path : __dirname + '/sessions'}),
   secret: 'lkasjdhfgkjlhafdgiludfha98fha98hf9agh',
   resave: true,
   saveUninitialized: true,
-  path : __dirname + '/sessions'
 }));
 
 var Model = require('./model');
