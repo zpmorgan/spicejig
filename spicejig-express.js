@@ -104,33 +104,6 @@ app.get('/t3/:t3id', (req,res) => {
   //res.sendFile('/home/zach/codestuff/scratch/spicejig/' + 'static/images/scream.jpg');
 });
 
-app.get('/scrape', function(req,res){
-  var url = "https://www.reddit.com/r/ImaginaryBestOf";
-  request(url, function(err,scrape_res,html){
-    if(err) return;
-    var $ = cheerio.load(html);
-    var entries = $('.thing');
-    var entry = entries.get(Math.floor(Math.random()*entries.length));
-    console.log(Object.getOwnPropertyNames(entries));
-    console.log(entry);
-    console.log(entry.attr());
-    return;
-    var entries = $('.thing').toArray();
-    console.log(entries[0]);
-    res.json(entries[0].attr('data-url'));
-    var entry = entries[Math.floor(Math.random()*entries.length)];
-    return;
-    console.log(entries);
-    console.log(entries.toArray().length);
-                return;
-    //console.log(entries);
-    var entry = entries[Math.floor(Math.random()*entries.length)];
-    console.log(entries);
-    console.log(entry.data('url'));
-    console.log(entries[0].data('url'));
-    res.json(entries[0].attr('data-url'));
-  });
-});
 app.get('/new_puz_spec', userify, function(req,res){
   var p = new Promise( (resolve,reject) => {
     req.user.rand_unfinished_t3().then( (tng) => {

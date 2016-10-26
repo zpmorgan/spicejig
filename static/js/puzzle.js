@@ -398,6 +398,8 @@ var Puzzle = function(gaem, fin_cb, img_key, target_num_pieces){ // pw,ph){
       context.restore();
 
       var tex = PIXI.Texture.fromCanvas(piece_canvas.canvas);
+      this.cx -= bounds.width / 2;
+      this.cy -= bounds.height / 2;
       var sprite = puz.game.add.sprite(this.cx,this.cy, tex);
       puz.group.add(sprite);
       sprite.inputEnabled = true;
