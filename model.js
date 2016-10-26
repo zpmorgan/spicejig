@@ -1,4 +1,6 @@
+"use strict";
 var request = require('request');
+var rp = require('request-promise');
 var redis = require("redis");
 var r_c = redis.createClient();
 var fs = require('fs');
@@ -6,28 +8,127 @@ var fs = require('fs');
 var Model = {};
 module.exports = Model;
 
-
-Model.rand_reddit_thing = () => { //return a promise
-  var url = "https://www.reddit.com/r/ImaginaryBestOf/top.json?limit=25&sort=top&t=all";
-  var p = new Promise(function(resolve,reject){
-    request(url, function(err,scrape_res, res_json){
-      if(err) { res.json("blehblah "+ err.code); return;}
-      if (scrape_res.statusCode !== 200) { res.json("code "+ scrape_res.statusCode); return;}
-      var res_parsed = JSON.parse(res_json);
-      if(res_parsed.kind !== "Listing") { res.json(res_parsed.kind); return;}
-      var things = res_parsed.data.children;
-      jpg_regex = /\.jpe?g(\?.*)?$/;
-      nothings = things.filter(function(t){return ! t.data.url.match(jpg_regex)});
-      things = things.filter(function(t){return t.data.url.match(jpg_regex)});
-      var thing = things[Math.floor(Math.random()*things.length)];
-      thing.img_from = "reddit";
-      r_c.hset('t3', thing.data.id, JSON.stringify(thing));
-      resolve(thing);
-    });
+Model.rand_reddit_thing = function(){ //return a promise
+  return new Promise( (reso,rej) => {
+    this.scrape_reddit_if_timely().then(scrape => {
+      //reso(scrape);
+      var p = this.weighted_rand_t3();
+      p.catch(err => { rej(err + '.kfffkfkf')});
+      p.then( t3 => {reso(t3)});
+    }).catch(err => {rej(err + '.asdfassaf')});
   });
-  return p;
 }
 
+Model.rand_subreddit_url = function(){
+  var subreddits = ['imaginarybestof', 'NoSillySuffix', 'ImaginaryMindscapes'];
+  var s = subreddits[Math.floor(Math.random()*subreddits.length)];
+  //"https://www.reddit.com/r/ImaginaryMindscapes/top.json?limit=25&sort=top&t=all",
+  var url;
+  if (Math.random() > .5)
+    url = "https://www.reddit.com/r/"+s+"/top.json?limit=100&sort=top&t=all";
+  else
+    url = "https://www.reddit.com/r/"+s+"/.json?limit=100";
+  return url;
+};
+
+Model.refresh_selektion = function(){
+  return new Promise( (reso,rej) => {
+    r_c.srandmember('t3_set', 40, (err,t3ids) => {
+      if(err) {rej(err+".vbvbvb");return};
+      r_c.hmget('t3', t3ids, (err,t3s) => {
+        for (let i=0; i < t3s.length; i++)
+          t3s[i] = JSON.parse(t3s[i]);
+        if(err) {rej(err+".8d8d8d");return};
+        let totscore = 0;
+        for(let t3 of t3s){
+          totscore += t3.data.score;
+        }
+        r_c.del('t3_selektor', () => {
+          let promises = [];
+          let score = 0;
+          for(let t3 of t3s){
+            promises.push(new Promise( (rs,rj) => {
+              score += t3.data.score / totscore;
+              r_c.zadd('t3_selektor', score, t3.data.id, ()=> {rs()});
+            }));
+          }
+          Promise.all(promises).then( () => {
+            reso(true);
+          }).catch( err => {console.log("blah!",err);rej(err + ', qzqzqz')});
+        });
+      });
+    });
+  });
+};
+// this returns duplicates.
+Model.weighted_t3_selektion = function(n){
+  return new Promise( (reso,rej)=>{
+    let promises = [];
+    for (let i=0;i<n;i++){
+      promises.push( new Promise ((rs,rj) => {
+        //this returns an array, even when it's of one.
+        r_c.zrangebyscore('t3_selektor', Math.random()*.9, 999, 'LIMIT', 0, 1, (err,t3) => {rs(t3[0])} );
+      }));
+    }
+    Promise.all(promises).then( selektion => {
+      reso(selektion);
+    }).catch( err => {rej(err + '.pgpgpg')});;
+  });
+};
+
+Model.scrape_reddit_if_timely = function(){
+  var d = new Date();
+  var d_seconds = Math.round(d.getTime() / 1000);
+  return new Promise( (reso,rej) => {
+    r_c.get('last_scrape_t', (err,t) => {
+      if(t===null) t=0;
+      else t = parseInt(t);
+      if (t + 5 > d_seconds){
+        reso( {scraped: "no"} );
+        return;
+      }
+      r_c.set('last_scrape_t', d_seconds);
+      let scrape_promise = Model.scrape_reddit();
+      scrape_promise.then( result => {
+        reso( {scraped: "yes", scrape : result} );
+        return;
+      });
+      scrape_promise.catch( err => {rej(err + '.qpqpqp')});;
+    });
+  });
+};
+
+Model.scrape_reddit = function(){
+  let url = Model.rand_subreddit_url();
+  return new Promise ( (reso,rej) => {
+    rp(url).then( json => {
+      var subreddit_page = JSON.parse(json);
+
+      var t3s = subreddit_page.data.children;
+      if (t3s.length < 3){
+        rej('whaaaat? url ' + url + ' returned:'+ "\n\n\n\n\n"+ json); return;
+      }
+      var hundred_promises = [];
+      for (let t3 of t3s){
+        r_c.hset('t3', t3.data.id, JSON.stringify(t3));
+        //remove from score index and re-insert.
+        // on redis 3 it can be done in one operation.
+        hundred_promises.push(new Promise( (resx,rejx) => {
+          r_c.sadd('t3_set', t3.data.id); // for random selection
+          r_c.zrem('t3_reddit_score', t3.data.id, () => {
+            r_c.zadd('t3_reddit_score', t3.data.score, t3.data.id, ()=>{
+              resx();
+              //console.log(t3.data.score, t3.data.id);
+            });
+          });
+        }));
+      }
+      //console.log(hundred_promises.length, 345345);
+      Promise.all(hundred_promises).then( values => {reso( {scraped : "yes"} ) } )
+        .catch(err => {rej(err + 'l4l4l4')});
+    }).catch( err => {rej(err + '.||||')});;
+  });
+};
 
 Model.t3_from_db = (thing_id) => { //return a promise.
   var p = new Promise( (resolve,rej) => {
@@ -73,7 +174,7 @@ Model.t3_img_path_when_ready = (t3_id) => {
   return p;
 };
 Model.user_from_json = json_stuff => {
-  stuff = JSON.parse(json_stuff);
+  var stuff = JSON.parse(json_stuff);
   var u = new Model.User();
   u.id = stuff.id
   return u;
@@ -84,7 +185,6 @@ Model.User = function(){
     return new Promise( (resolve, rej) => {
       console.log(this.id);
       r_c.hget('fin_by_user', this.id, (err,res) => {
-        console.log(err,res,'asdf');
         if (res === null)
           res = "{}";
         resolve(JSON.parse(res));
@@ -113,8 +213,45 @@ Model.User = function(){
       });
     });
   };
+
+  //return a random t3 that hasn't been fin'd by this user
+  //
+  this.next_t3 = () => {
+    return new Promise((reso, rej) => {
+      reso(1234);
+    });
+  };
+  this.rand_unfinished_t3id = function(){
+    return new Promise( (reso,rej)=>{
+      Model.refresh_selektion().then(() => {
+        Model.weighted_t3_selektion(10).then( t3ids => {
+          this.get_fin().then ( (fin) => {
+            for (let t3id of t3ids){
+              if (!fin[t3id]){
+                reso(t3id);
+                return;
+              }
+            }
+            rej('tried 10, nothing new found');
+          });
+        });;
+      });
+    });
+  }
+  this.rand_unfinished_t3 = function(){
+    return new Promise( (reso,rej)=>{
+      this.rand_unfinished_t3id().then( t3id => {
+        r_c.hget('t3', t3id, (err,t3) => {
+          if (err) {
+            rej(t3id + ' t3 not gotten: '+err);
+            return;
+          }
+          reso(JSON.parse(t3));
+        });
+      }).catch( err => {rej(err + '.mikmik')});;
+    });
+  };
 };
-Model.User.prototype.fin = asdf=>{};
 
 if(false)
 ['log', 'warn'].forEach(function(method) {
@@ -142,7 +279,7 @@ Model.gen_new_user = function(){
   return new Promise( (resolve,reject) => {
     r_c.incr('next_userid', function(err,nextid){
       if(err)
-        reject(err);
+        reject(err + '.asdf9');
       var user = {id : nextid};
       r_c.hset('user', nextid, JSON.stringify(user));
       resolve(user);

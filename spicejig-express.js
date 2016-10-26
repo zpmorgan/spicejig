@@ -1,6 +1,4 @@
-//var http = require("http");
-//var cheerio = require('cheerio');
-var request = require('request');
+//var request = require('request');
 var express = require('express');
 var app = express();
 app.use(express.static(__dirname + '/static'));
@@ -68,8 +66,8 @@ app.get('/scream', (req,res) => {
   res.render('puzzle.must', {title:'😱 😱 😱 😱 😱', spec: JSON.stringify(spec)});
 });
 
-app.get('/scrapejson', function(req,res){
-  Model.rand_reddit_thing().then(function(thing){
+app.get('/scrapereddit', function(req,res){
+  Model.scrape_reddit().then(function(thing){
     res.json(thing);
   });
 });
@@ -135,11 +133,13 @@ app.get('/scrape', function(req,res){
 });
 app.get('/new_puz_spec', userify, function(req,res){
   var p = new Promise( (resolve,reject) => {
-    Model.rand_reddit_thing().then( (tng) => {
+    req.user.rand_unfinished_t3().then( (tng) => {
+      tng.img_from = 'reddit';
       resolve(tng);
-    });
+    }).catch( err=>{ reject(err + '.p3p3') });;
   });
-  p.then( (tng) => {res.json(tng)}).catch((err) => {console.log(err)});;
+  p.then( (tng) => {res.json(tng)});
+  p.catch( err => {res.json(err + '.dadadadada')});
 });
 
 app.get('/fin/:t3id', userify, (req,res) => {

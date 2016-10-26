@@ -80,6 +80,8 @@ playGame.prototype = {
       game.load.image("scream", "images/scream.jpg");
     else if (spec.img_from == "solidcolor"){
     }
+    else
+      console.error( 'from whence it from?' );
     game.load.image('bg', '/images/bg.jpg');
 
     game.fin = function(){
