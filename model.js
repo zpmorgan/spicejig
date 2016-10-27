@@ -8,17 +8,6 @@ var fs = require('fs');
 var Model = {};
 module.exports = Model;
 
-Model.rand_reddit_thing = function(){ //return a promise
-  return new Promise( (reso,rej) => {
-    this.scrape_reddit_if_timely().then(scrape => {
-      //reso(scrape);
-      var p = this.weighted_rand_t3();
-      p.catch(err => { rej(err + '.kfffkfkf')});
-      p.then( t3 => {reso(t3)});
-    }).catch(err => {rej(err + '.asdfassaf')});
-  });
-}
-
 Model.rand_subreddit_url = function(){
   var subreddits = ['imaginarybestof', 'NoSillySuffix', 'ImaginaryMindscapes'];
   var s = subreddits[Math.floor(Math.random()*subreddits.length)];
@@ -33,31 +22,33 @@ Model.rand_subreddit_url = function(){
 
 Model.refresh_selektion = function(){
   return new Promise( (reso,rej) => {
-    r_c.srandmember('t3_set', 40, (err,t3ids) => {
-      if(err) {rej(err+".vbvbvb");return};
-      r_c.hmget('t3', t3ids, (err,t3s) => {
-        for (let i=0; i < t3s.length; i++)
-          t3s[i] = JSON.parse(t3s[i]);
-        if(err) {rej(err+".8d8d8d");return};
-        let totscore = 0;
-        for(let t3 of t3s){
-          totscore += t3.data.score;
-        }
-        r_c.del('t3_selektor', () => {
-          let promises = [];
-          let score = 0;
+    Model.scrape_reddit_if_timely().then( () => {
+      r_c.srandmember('t3_set', 40, (err,t3ids) => {
+        if(err) {rej(err+".vbvbvb");return};
+        r_c.hmget('t3', t3ids, (err,t3s) => {
+          for (let i=0; i < t3s.length; i++)
+            t3s[i] = JSON.parse(t3s[i]);
+          if(err) {rej(err+".8d8d8d");return};
+          let totscore = 0;
           for(let t3 of t3s){
-            promises.push(new Promise( (rs,rj) => {
-              score += t3.data.score / totscore;
-              r_c.zadd('t3_selektor', score, t3.data.id, ()=> {rs()});
-            }));
+            totscore += t3.data.score;
           }
-          Promise.all(promises).then( () => {
-            reso(true);
-          }).catch( err => {console.log("blah!",err);rej(err + ', qzqzqz')});
+          r_c.del('t3_selektor', () => {
+            let promises = [];
+            let score = 0;
+            for(let t3 of t3s){
+              promises.push(new Promise( (rs,rj) => {
+                score += t3.data.score / totscore;
+                r_c.zadd('t3_selektor', score, t3.data.id, ()=> {rs()});
+              }));
+            }
+            Promise.all(promises).then( () => {
+              reso(true);
+            }).catch( err => {console.log("blah!",err);rej(err + ', qzqzqz')});
+          });
         });
       });
-    });
+    }).catch (err => {rej(err + 'bhobho')});
   });
 };
 // this returns duplicates.
@@ -83,7 +74,7 @@ Model.scrape_reddit_if_timely = function(){
     r_c.get('last_scrape_t', (err,t) => {
       if(t===null) t=0;
       else t = parseInt(t);
-      if (t + 5 > d_seconds){
+      if (t + 100 > d_seconds){
         reso( {scraped: "no"} );
         return;
       }
