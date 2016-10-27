@@ -1,13 +1,27 @@
-//var request = require('request');
+var config;
+try {
+  config = require('./config.json')
+  console.log('loading config.json');
+} catch (ex) {
+  console.log('config not found.');
+  config = {
+    secret: 'lkasjdhfgkjlhafdgiludfha98fha98hf9agh',
+  }
+}
+
 var express = require('express');
 var app = express();
 app.use(express.static(__dirname + '/static'));
 
 var session = require('express-session');
 var FileStore = require('session-file-store')(session);
+let filestore_options = {
+  path : __dirname + '/sessions',
+  ttl : 3600 * 24 * 365 * 1000 // 1000 years.
+};
 app.use(session({
   store: new FileStore({path : __dirname + '/sessions'}),
-  secret: 'lkasjdhfgkjlhafdgiludfha98fha98hf9agh',
+  secret: config.secret,
   resave: true,
   saveUninitialized: true,
 }));
