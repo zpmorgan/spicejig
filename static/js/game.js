@@ -86,6 +86,7 @@ playGame.prototype = {
 
     game.fin = function(){
       game.sound.play('victorysound');
+      loadJSON('fin/' + spec.data.id); // just report the fin
       console.log('fin');
     };
 	},
