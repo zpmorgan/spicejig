@@ -75,7 +75,7 @@ playGame.prototype = {
     //game.load.image("scream", "images/scream.jpg");
     var spec = game.getSpec();
     if (spec.img_from == "reddit")
-      game.load.image('scream', '/t3/' + spec.data.id);
+      game.load.image('scream', '/t3_img/' + spec.data.id);
     else if (spec.img_from == "scream")
       game.load.image("scream", "images/scream.jpg");
     else if (spec.img_from == "solidcolor"){

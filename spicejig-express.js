@@ -52,6 +52,18 @@ app.get('/',userify, function(req, res) {
   res.render('puzzle.must', {title:'Jigsaw', spec: JSON.stringify(spec)});
 });
 
+app.get('/t3/:t3id',userify, function(req, res) {
+  var spec;
+  Model.t3_from_db(req.params.t3id).then(t3 => {
+    var spec = t3;
+    spec.img_from = 'reddit';
+    res.render('puzzle.must', {title:'Jigsaw', spec: JSON.stringify(spec)});
+  }).catch( err => {
+    console.log(err);
+    res.json(err);
+  });
+});
+
 //geometryitudeificatoralizor
 //squarifaciareifier
 //squaritudeifier
@@ -86,7 +98,7 @@ app.get('/scrapereddit', function(req,res){
   });
 });
 
-app.get('/t3/:t3id', (req,res) => {
+app.get('/t3_img/:t3id', (req,res) => {
   var img_dir = "/tmp/";
   var filename = req.params.t3id + '.jpg';
   //var fspath = img_dir + filename;
