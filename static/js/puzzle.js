@@ -56,8 +56,8 @@ var Puzzle = function(gaem, fin_cb, img_key, target_num_pieces){ // pw,ph){
   var orig_iw = this.img.width; //300; //image size. as in, of all the pieces put together.
   var orig_ih = this.img.height;
   var aspect_ratio = orig_iw / orig_ih;
-  var pw = Math.round(Math.sqrt(target_num_pieces) * aspect_ratio);
-  var ph = Math.round(Math.sqrt(target_num_pieces) / aspect_ratio);
+  var pw = Math.round(Math.sqrt(target_num_pieces) * Math.sqrt(aspect_ratio));
+  var ph = Math.round(Math.sqrt(target_num_pieces) / Math.sqrt(aspect_ratio));
   console.log(pw + 'x' + ph + '=' + pw*ph);
 
   this.ph = ph; // pieces wide/high, e.g. 15, 12
