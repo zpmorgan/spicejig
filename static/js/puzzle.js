@@ -108,7 +108,8 @@ var Puzzle = function(gaem, fin_cb, img_key, target_num_pieces){ // pw,ph){
           }
         });
       });
-      return new Phaser.Rectangle(x1,y1, x2-x1, y2-y1);
+      //inflate so edge strokes are not cut off.
+      return new Phaser.Rectangle(x1,y1, x2-x1, y2-y1).inflate(2,2);
     };
   };
   this.SinglePiece = function(px,py,borders){
