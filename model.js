@@ -121,11 +121,11 @@ Model.scrape_reddit = function(){
   });
 };
 
-Model.t3_from_db = (thing_id) => { //return a promise.
+Model.t3_from_db = (t3id) => { //return a promise.
   var p = new Promise( (resolve,rej) => {
-    r_c.hget('t3', thing_id, (err, result) => {
+    r_c.hget('t3', t3id, (err, result) => {
       if (!result){
-        rej(thing_id + " not found as a t3 in redis");
+        rej(t3id + " not found as a t3 in redis");
       }
       else {
         var thing = JSON.parse(result);
@@ -232,14 +232,14 @@ Model.User = function(){
   this.rand_unfinished_t3 = function(){
     return new Promise( (reso,rej)=>{
       this.rand_unfinished_t3id().then( t3id => {
-        r_c.hget('t3', t3id, (err,t3) => {
-          if (err) {
-            rej(t3id + ' t3 not gotten: '+err);
-            return;
-          }
-          reso(JSON.parse(t3));
-        });
-      }).catch( err => {rej(err + '.mikmik')});;
+        Model.t3_from_db (t3id)
+          .then( t3 => { //return a promise.
+            reso(t3);
+          })
+          .catch( err => {
+            rej('t3 getting err: '+ err + '.bifffff');
+          });
+      }).catch( err => {rej('couldnt get a rand id'+ err + '.mikmik')});;
     });
   };
 };
