@@ -101,6 +101,9 @@ Model.scrape_reddit = function(){
       }
       var hundred_promises = [];
       for (let t3 of t3s){
+        var jpg_re = /\.jpg/;
+        if (! t3.data.url.match(jpg_re)) //only direct links to images please
+          continue;
         r_c.hset('t3', t3.data.id, JSON.stringify(t3));
         //remove from score index and re-insert.
         // on redis 3 it can be done in one operation.
@@ -121,6 +124,45 @@ Model.scrape_reddit = function(){
   });
 };
 
+var t3pic_requests = {};
+// resolve file path when image starts downloading
+// resolve file path if it's already downloading
+// resolve file path if it's already downloaded
+// reject if 404.
+Model.fspath_t3pic = function(t3id){
+  var img_dir = "/tmp/";
+  var filename = t3id + '.jpg';
+  var fspath = img_dir + filename;
+  return new Promise( (reso,rej) => {
+    if (t3pic_requests[t3id]){
+      reso(fspath);//partially downloaded? maybe that's ok.
+      return;
+    }
+    var stat = fs.stat(fspath, (err,stats) => {
+      if (!err){
+        reso(fspath);
+        return;
+      }
+      // file not found, so fetch it.
+      Model.t3_from_db(t3id).then( t3 => { // it's not here, gotta fetch it.
+        console.log('getting '+t3.data.url);
+        var r = request.get(t3.data.url);
+        var w = fs.createWriteStream(fspath);
+        w.on('open', () => {
+          //console.log('w opend > ' + fspath);
+        });
+        w.on('finish', () => {
+          reso(fspath);
+          delete t3pic_requests[t3.data.id];
+        });
+        t3pic_requests[t3.data.id] = r;
+        r.pipe(w);
+      }).catch ( err => {rej(err + '.orooroorooro')});
+    });
+  });
+
+};
+
 Model.t3_from_db = (t3id) => { //return a promise.
   var p = new Promise( (resolve,rej) => {
     r_c.hget('t3', t3id, (err, result) => {
@@ -135,35 +177,8 @@ Model.t3_from_db = (t3id) => { //return a promise.
   });
   return p;
 };
-Model.t3_img_path_when_ready = (t3_id) => {
-  var img_dir = "/tmp/";
-  var filename = t3_id + '.jpg';
-  var fspath = img_dir + filename;
-  var p = new Promise( (resolve,rej) => {
-    fs.access(fspath, fs.constants.R_OK, (err) => {
-      if(!err){
-        resolve(fspath);
-        return;
-      }
-      Model.t3_from_db(t3_id).then( (thing) => {
-        // get the json for the thing from redis
-        // and download the actual jpg
-        request
-          .get(thing.data.url)
-          .pipe(fs.createWriteStream(fspath))
-          .on('finish', () => {
-            resolve(fspath);
-            //res.sendFile(fspath);
-          })
-          .on('error', function(err) {
-               console.log(err)
-          });
-      });
-    });
-    //resolve('/foo');
-  });
-  return p;
-};
+
+
 Model.user_from_json = json_stuff => {
   var stuff = JSON.parse(json_stuff);
   var u = new Model.User();

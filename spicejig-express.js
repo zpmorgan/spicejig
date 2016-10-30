@@ -39,7 +39,7 @@ var userify = function(req,res,next){
   Model.get_user_from_session_id(req.session.id).then( (user) => {
     req.user = user;
     req.session.userid = user.id;
-    console.log("user " + user.id + ' connected.  sessid: '+ req.session.id);
+    //console.log("user " + user.id + ' connected.  sessid: '+ req.session.id);
     next();
   });
 };
@@ -99,6 +99,15 @@ app.get('/scrapereddit', function(req,res){
 });
 
 app.get('/t3_img/:t3id', (req,res) => {
+  //Model.stream_t3pic(req.params.t3id)
+  Model.fspath_t3pic(req.params.t3id)
+    .then( fspath => {
+      res.sendfile(fspath);
+      //res.setHeader("content-type", "image/jpeg");
+      //stream.pipe(res);
+    })
+    .catch(err => {res.json(err + '.nyxnyxnyx')});
+  return;
   var img_dir = "/tmp/";
   var filename = req.params.t3id + '.jpg';
   //var fspath = img_dir + filename;
