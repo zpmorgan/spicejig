@@ -98,15 +98,19 @@ playGame.prototype = {
     };
 	},
 	create: function(){
+    game.canvas.oncontextmenu = function (e) { e.preventDefault(); }
+    game.bg = game.add.tileSprite(0, 0, game.width, game.height, 'bg');
+
     let spec = game.getSpec();
     let what_to_cut = {key:"scream"};
     if (spec.img_from == "solidcolor"){
       what_to_cut = {color:"white", width:8, height:6}; //it scales anyways
     }
-
-    game.canvas.oncontextmenu = function (e) { e.preventDefault(); }
-    game.bg = game.add.tileSprite(0, 0, game.width, game.height, 'bg');
-    puzzle = new Puzzle(game, game.fin, what_to_cut, spec.pieces || 80);
+    let how_to_cut = {};
+    how_to_cut.pieces = spec.pieces || 80;
+    if(spec.perturbation)
+      how_to_cut.perturbation = spec.perturbation;
+    puzzle = new Puzzle(game, game.fin, what_to_cut, how_to_cut);
     game.soundBtn = this.add.button(20,20,'pausebutton', game.playPause, this,null,null,null);
     game.soundBtn.width = 55;
     game.soundBtn.height= 55;
@@ -115,13 +119,12 @@ playGame.prototype = {
 var rain = function(game){}
 rain.prototype = {
   create : function(){
-    var picCB = Puzzle.genPieceCanvasBuffer(150, 'white');
+    let spec = game.getSpec();
+    var picCB = Puzzle.genPieceCanvasBuffer(150, 'white', spec.perturbation);
     var tex = PIXI.Texture.fromCanvas(picCB.canvas);
-    this.game.add.sprite(200,200,tex);
+    this.game.add.sprite(100,100,tex);
     console.log(tex);
     console.log(game);
-
-
   }
 }
 

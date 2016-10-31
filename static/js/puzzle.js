@@ -64,12 +64,12 @@ var Puzzle = function(gaem, fin_cb, what_to_cut, how_to_cut){
     this.ih = what_to_cut.height || 400;
   };
 
-  if (Array.isArray(how_to_cut)){
-    this.pw = how_to_cut[0];
-    this.ph = how_to_cut[1];
+  if (how_to_cut.dims){
+    this.pw = how_to_cut.dims[0];
+    this.ph = how_to_cut.dims[1];
   }
   else { //howtocut is 80 or something, so try to cut around that many pieces
-    let target_num_pieces = how_to_cut;
+    let target_num_pieces = how_to_cut.pieces || 7;
     let aspect_ratio = this.iw / this.ih;
     let pw = Math.round(Math.sqrt(target_num_pieces) * Math.sqrt(aspect_ratio));
     let ph = Math.round(Math.sqrt(target_num_pieces) / Math.sqrt(aspect_ratio));
@@ -139,7 +139,8 @@ var Puzzle = function(gaem, fin_cb, what_to_cut, how_to_cut){
   this.SinglePiece.prototype = new this.Piece();
 
   this.squiggle = function(){
-    let p = 0.115;
+    let p = how_to_cut.perturbation || 0.115;
+    console.log(how_to_cut);
     var midpoint = new Phaser.Point(0.5, 0).perturb(p,0);
     var nubpoint = new Phaser.Point(midpoint.x, 0.3).perturb(0, p);
     var nubpoint_slope = new Phaser.Point(0.29,0).perturb(p, p/2);
@@ -518,9 +519,11 @@ var Puzzle = function(gaem, fin_cb, what_to_cut, how_to_cut){
     }
   }
 };
-Puzzle.genPieceCanvasBuffer = function(size, color){
+Puzzle.genPieceCanvasBuffer = function(size, color, perturbation){
   let what_to_cut = {color:'orange', width:size*3, height:size*3};
-  let how_to_cut = [3,3];
+  let how_to_cut = {dims: [3,3]};
+  if(perturbation)
+    how_to_cut.perturbation = perturbation;
   let p= new Puzzle(null, null, what_to_cut, how_to_cut);
   return p.glob_layout[1][1].genTexture();
 

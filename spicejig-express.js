@@ -43,27 +43,33 @@ var userify = function(req,res,next){
     next();
   });
 };
+var spec_params = function(req,res,next){
+  req.spec = {};
+  if(req.query.pieces)
+    req.spec.pieces = req.query.pieces;
+  if(req.query.perturbation)
+    req.spec.perturbation = req.query.perturbation;
+  next();
+};
 
 // make it rain
-app.get('/rain',userify, function(req, res) {
+app.get('/rain',userify,spec_params, function(req, res) {
   //res.sendFile(__dirname + '/static/puzzle.html');
-  var spec = {source : "rain"};
-  res.render('puzzle.must', {title:'Make it rain', spec: JSON.stringify(spec), nomusic:true});
+  req.spec.source = "rain";
+  res.render('puzzle.must', {title:'Make it rain', spec: JSON.stringify(req.spec), nomusic:true});
 });
 
-app.get('/',userify, function(req, res) {
+app.get('/',userify,spec_params, function(req, res) {
   //res.sendFile(__dirname + '/static/puzzle.html');
-  var spec = {source : "random"};
-  if(req.query.pieces)
-    spec.pieces = req.query.pieces;
-  res.render('puzzle.must', {title:'Jigsaw', spec: JSON.stringify(spec)});
+  req.spec.source = "random";
+  res.render('puzzle.must', {title:'Jigsaw', spec: JSON.stringify(req.spec)});
 });
 
-app.get('/t3/:t3id',userify, function(req, res) {
-  var spec;
+app.get('/t3/:t3id',userify,spec_params, function(req, res) {
   Model.t3_from_db(req.params.t3id).then(t3 => {
     var spec = t3;
     spec.img_from = 'reddit';
+    for (var attrname in req.spec) { spec[attrname] = req.spec[attrname]; }
     res.render('puzzle.must', {title:'Jigsaw', spec: JSON.stringify(spec)});
   }).catch( err => {
     console.log(err);
@@ -79,24 +85,17 @@ app.get('/t3/:t3id',userify, function(req, res) {
 //squeerifier.squeerify
 //tileosqueequalizer
 //geomosquaralizor.geomosquaralize()
-app.get('/blank', (req,res) => {
+app.get('/blank', userify, spec_params,(req,res) => {
   console.log(req.session.id);
   req.session.blargles = 'foo';
-  var spec = {
-    img_from: 'solidcolor',
-    width: 100,
-    height: 100,
-    pieces: 100,
-  };
-  if(req.query.pieces)
-    spec.pieces = req.query.pieces;
-  res.render('puzzle.must', {title:'Blank Jigsaw', spec: JSON.stringify(spec), nomusic: true});
+  req.spec.img_from = 'solidcolor';
+  req.spec.width = 100;
+  req.spec.height= 100;
+  res.render('puzzle.must', {title:'Blank Jigsaw', spec: JSON.stringify(req.spec), nomusic: true});
 });
-app.get('/scream', (req,res) => {
-  var spec = {img_from: "scream"};
-  if(req.query.pieces)
-    spec.pieces = req.query.pieces;
-  res.render('puzzle.must', {title:'😱 😱 😱 😱 😱', spec: JSON.stringify(spec)});
+app.get('/scream', userify, spec_params, (req,res) => {
+  req.spec.img_from = "scream";
+  res.render('puzzle.must', {title:'😱 😱 😱 😱 😱', spec: JSON.stringify(req.spec)});
 });
 
 app.get('/scrapereddit', function(req,res){
