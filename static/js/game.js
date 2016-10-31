@@ -105,6 +105,7 @@ playGame.prototype = {
     }
 
     game.canvas.oncontextmenu = function (e) { e.preventDefault(); }
+    game.bg = game.add.tileSprite(0, 0, game.width, game.height, 'bg');
     puzzle = new Puzzle(game, game.fin, what_to_cut, spec.pieces || 80);
     game.soundBtn = this.add.button(20,20,'pausebutton', game.playPause, this,null,null,null);
     game.soundBtn.width = 55;

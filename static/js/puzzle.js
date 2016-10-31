@@ -52,7 +52,6 @@ var Puzzle = function(gaem, fin_cb, what_to_cut, how_to_cut){
   "use strict";
   this.game = gaem;
   this.fin_cb= fin_cb;
-  this.bg = this.game.add.tileSprite(0, 0, gaem.width, gaem.height, 'bg');
   if (what_to_cut.key){
     this.img = this.game.cache.getImage(what_to_cut.key);
     this.pattern_type = "img";
