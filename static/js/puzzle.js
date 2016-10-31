@@ -79,30 +79,32 @@ var Puzzle = function(gaem, fin_cb, what_to_cut, how_to_cut){
     this.pw = pw;
   }
 
-  var orig_area = this.iw * this.ih;
-  this.working_area = gaem.width * gaem.height;
-  this.target_area = this.working_area * 0.8;
-  // w*h * scale**2 = tw*th
-  // scale**2 = tw*th/(w*h)
-  // scale = sqrt(target_area / image_area)
-  this.img_scale = Math.sqrt(this.target_area / orig_area);
-  this.target_iw = this.iw * this.img_scale;
-  this.target_ih = this.ih * this.img_scale;
-  this.apw = this.target_iw / this.pw; // average piece width. not counting protrusions into neighboring pieces.
-  this.aph = this.target_ih / this.ph;
+  // scale to the game window
+  if(this.game){
+    var orig_area = this.iw * this.ih;
+    this.working_area = gaem.width * gaem.height;
+    this.target_area = this.working_area * 0.8;
+    // w*h * scale**2 = tw*th
+    // scale**2 = tw*th/(w*h)
+    // scale = sqrt(target_area / image_area)
+    this.img_scale = Math.sqrt(this.target_area / orig_area);
+    this.target_iw = this.iw * this.img_scale;
+    this.target_ih = this.ih * this.img_scale;
+    this.apw = this.target_iw / this.pw; // average piece width. not counting protrusions into neighboring pieces.
+    this.aph = this.target_ih / this.ph;
+  } else {
+    this.apw = this.iw / this.pw;
+    this.aph = this.ih / this.ph;
+  }
 
   var puz = this;
-  this.group = this.game.add.group(); //all the pieces are in a group behind some gui stuff.
+  if(this.game) //no need to render sprites
+    this.group = this.game.add.group(); //all the pieces are in a group behind some gui stuff.
   this.n_globs = 0;
 
   // nested class
-  // px, py are col, row of the jigsaw cut.
-  // cx,cy are positions on the canvas.
+  // superclass of singlepiece & globule
   this.Piece = function(){
-    this.cx = 0;
-    this.cy = 0;
-    //this.borders = [];
-
     this.getBounds = function(){
       var borders = this.getBorders();
       var first_point = borders[0].getPaths()[0][0];// bz[0][0][0];
@@ -124,6 +126,8 @@ var Puzzle = function(gaem, fin_cb, what_to_cut, how_to_cut){
       return new Phaser.Rectangle(x1,y1, x2-x1, y2-y1).inflate(2,2);
     };
   };
+  // px, py are col, row of the jigsaw cut.
+  // cx,cy are positions on the canvas.
   this.SinglePiece = function(px,py,borders){
     this.px = px;
     this.py = py;
@@ -167,7 +171,7 @@ var Puzzle = function(gaem, fin_cb, what_to_cut, how_to_cut){
   this.PieceBorder = function(p1, p2, straight_line){
     this.id = ++_piece_border_id;
     // randomize direction.
-    if (puz.game.rnd.pick([true,false])){
+    if (Math.random() > 0.5) {
       this.corner2 = p2;
       this.corner1 = p1;
     }else{
@@ -294,8 +298,7 @@ var Puzzle = function(gaem, fin_cb, what_to_cut, how_to_cut){
       //glob.{cx,cy} is where it is.
       //where it is minus where it should be is the displacement.
     };
-
-    this.genSprite = function(){
+    this.genTexture = function(){
       //var borderDirection = [0,0,1,1];
       var borders = this.getBorders();
 
@@ -353,9 +356,8 @@ var Puzzle = function(gaem, fin_cb, what_to_cut, how_to_cut){
       var bounds = this.getBounds();
       var piece_disp = bounds.topLeft;
 
-      //var piece_canvas = new PIXI.CanvasBuffer(400,400);
-      var piece_canvas = new PIXI.CanvasBuffer(bounds.width, bounds.height);
-      var context = piece_canvas.context;
+      var canvas_buffer = new PIXI.CanvasBuffer(bounds.width, bounds.height);
+      var context = canvas_buffer.context;
       var in_path = false;
 
       for (var i in route){ //draw the curve on the canvas
@@ -407,7 +409,11 @@ var Puzzle = function(gaem, fin_cb, what_to_cut, how_to_cut){
       context.strokeStyle = "#111111";
       context.stroke();
       context.restore();
+      return canvas_buffer;
+    }
 
+    this.genSprite = function(){
+      var piece_canvas = this.genTexture();
       var tex = PIXI.Texture.fromCanvas(piece_canvas.canvas);
       var sprite = puz.game.add.sprite(this.cx,this.cy, tex);
       puz.group.add(sprite);
@@ -490,12 +496,13 @@ var Puzzle = function(gaem, fin_cb, what_to_cut, how_to_cut){
       puz.n_globs++;
       this.glob_layout[x][y] = glob;
       //give it a random position on the canvas.
-      glob.cx = puz.game.rnd.between(100, puz.game.width-100);
-      glob.cy = puz.game.rnd.between(100, puz.game.height-100);
-      glob.cx -= puz.apw / 2;
-      glob.cy -= puz.aph / 2;
-      //var sprite = glob.genSprite(this);
-      glob.genSprite(this);
+      if(puz.game){
+        glob.cx = puz.game.rnd.between(100, puz.game.width-100);
+        glob.cy = puz.game.rnd.between(100, puz.game.height-100);
+        glob.cx -= puz.apw / 2;
+        glob.cy -= puz.aph / 2;
+        glob.genSprite();
+      }
     }
   }
   for (x = 0; x < this.pw-1; x++){
@@ -511,8 +518,11 @@ var Puzzle = function(gaem, fin_cb, what_to_cut, how_to_cut){
     }
   }
 };
-Puzzle.genPiecetexture = function(size, color){
-  var p = new Puzzle(); ///....
+Puzzle.genPieceCanvasBuffer = function(size, color){
+  let what_to_cut = {color:'orange', width:size*3, height:size*3};
+  let how_to_cut = [3,3];
+  let p= new Puzzle(null, null, what_to_cut, how_to_cut);
+  return p.glob_layout[1][1].genTexture();
 
 };
 

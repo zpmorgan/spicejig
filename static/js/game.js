@@ -115,9 +115,10 @@ playGame.prototype = {
 var rain = function(game){}
 rain.prototype = {
   create : function(){
-    var pictex = Puzzle.genPiecetexture(150, 'white');
-    this.game.add.sprite(200,200,pictex);
-    console.log(this);
+    var picCB = Puzzle.genPieceCanvasBuffer(150, 'white');
+    var tex = PIXI.Texture.fromCanvas(picCB.canvas);
+    this.game.add.sprite(200,200,tex);
+    console.log(tex);
     console.log(game);
 
 
