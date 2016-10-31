@@ -44,6 +44,13 @@ var userify = function(req,res,next){
   });
 };
 
+// make it rain
+app.get('/rain',userify, function(req, res) {
+  //res.sendFile(__dirname + '/static/puzzle.html');
+  var spec = {source : "rain"};
+  res.render('puzzle.must', {title:'Make it rain', spec: JSON.stringify(spec), nomusic:true});
+});
+
 app.get('/',userify, function(req, res) {
   //res.sendFile(__dirname + '/static/puzzle.html');
   var spec = {source : "random"};
@@ -83,7 +90,7 @@ app.get('/blank', (req,res) => {
   };
   if(req.query.pieces)
     spec.pieces = req.query.pieces;
-  res.render('puzzle.must', {title:'Blank Jigsaw', spec: JSON.stringify(spec)});
+  res.render('puzzle.must', {title:'Blank Jigsaw', spec: JSON.stringify(spec), nomusic: true});
 });
 app.get('/scream', (req,res) => {
   var spec = {img_from: "scream"};

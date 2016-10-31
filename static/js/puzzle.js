@@ -50,7 +50,7 @@ var Puzzle = function(gaem, fin_cb, img_key, target_num_pieces){ // pw,ph){
   "use strict";
   this.game = gaem;
   this.fin_cb= fin_cb;
-  this.bg = game.add.tileSprite(0, 0, gaem.width, gaem.height, 'bg');
+  this.bg = this.game.add.tileSprite(0, 0, gaem.width, gaem.height, 'bg');
   this.img = this.game.cache.getImage(img_key);
 
   var orig_iw = this.img.width; //300; //image size. as in, of all the pieces put together.
@@ -409,15 +409,9 @@ var Puzzle = function(gaem, fin_cb, img_key, target_num_pieces){ // pw,ph){
       sprite.input.bringToTop = true;
       var globbo = this;
       sprite.events.onDragStop.add(function(item, pointer){
-        //console.log(puzzle, pointer, item);
-        //console.log(globbo);
-        //console.log(globbo.cx);
-        //console.log(item.x);
         globbo.cx = item.x;
         globbo.cy = item.y;
         globbo.checkForGlomming();
-        //puz.checkForGlomming(globbo);
-
       });
       this._sprite = sprite;
 
@@ -506,6 +500,10 @@ var Puzzle = function(gaem, fin_cb, img_key, target_num_pieces){ // pw,ph){
       this.glob_layout[x][y+1]._neighbors.push( this.glob_layout[x][y] );
     }
   }
+};
+Puzzle.genPiecetexture = function(size, color){
+  var p = new Puzzle(); ///....
 
 };
+
 

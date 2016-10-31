@@ -3,14 +3,19 @@ var puzzle;
 
 //maybe the spec is supplied directly
 //or maybe we have to source it from /new_puz_spec
-var source_spec = G.spec.source ? true : false;
+var source_spec = G.spec.source == "random" ? true : false;
+var rain_spec = G.spec.source == "rain" ? true : false;
 
 requirejs(['domReady', 'phaser', 'puzzle'], function(domReady){
   domReady(function() {
     game = new Phaser.Game(window.innerWidth, window.innerHeight);
     game.state.add("PlayGame", playGame)
     game.state.add("Boot", boot)
-    game.state.start("Boot");
+    game.state.add("Rain", rain)
+    if (rain_spec)
+      game.state.start("Rain");
+    else 
+      game.state.start("Boot");
     game.playPause = function(){
       var audio = document.getElementById("musick");
       if (audio.paused){
@@ -99,4 +104,18 @@ playGame.prototype = {
     game.soundBtn.height= 55;
   }
 }
+var rain = function(game){}
+rain.prototype = {
+  create : function(){
+    var pictex = Puzzle.genPiecetexture(150, 'white');
+    this.game.add.sprite
+    console.log(this);
+    console.log(game);
+
+
+  }
+}
+
+
+
 
