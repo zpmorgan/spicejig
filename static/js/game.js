@@ -5,6 +5,7 @@ var puzzle;
 //or maybe we have to source it from /new_puz_spec
 var source_spec = G.spec.source == "random" ? true : false;
 var rain_spec = G.spec.source == "rain" ? true : false;
+var blank_spec = G.spec.img_from == "solidcolor" ? true : false;
 
 requirejs(['domReady', 'phaser', 'puzzle'], function(domReady){
   domReady(function() {
@@ -91,14 +92,20 @@ playGame.prototype = {
 
     game.fin = function(){
       game.sound.play('victorysound');
-      loadJSON('fin/' + spec.data.id); // just report the fin
+      if(spec.img_from === 'reddit')
+        loadJSON('fin/' + spec.data.id); // just report the fin
       console.log('fin');
     };
 	},
 	create: function(){
-    var spec = game.getSpec();
+    let spec = game.getSpec();
+    let what_to_cut = {key:"scream"};
+    if (spec.img_from == "solidcolor"){
+      what_to_cut = {color:"white", width:8, height:6}; //it scales anyways
+    }
+
     game.canvas.oncontextmenu = function (e) { e.preventDefault(); }
-    puzzle = new Puzzle(game, game.fin, "scream", spec.pieces || 80);
+    puzzle = new Puzzle(game, game.fin, what_to_cut, spec.pieces || 80);
     game.soundBtn = this.add.button(20,20,'pausebutton', game.playPause, this,null,null,null);
     game.soundBtn.width = 55;
     game.soundBtn.height= 55;
@@ -108,7 +115,7 @@ var rain = function(game){}
 rain.prototype = {
   create : function(){
     var pictex = Puzzle.genPiecetexture(150, 'white');
-    this.game.add.sprite
+    this.game.add.sprite(200,200,pictex);
     console.log(this);
     console.log(game);
 

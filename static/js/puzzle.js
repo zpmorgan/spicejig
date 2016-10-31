@@ -46,38 +46,51 @@ require(['phaser'], function(){
   };
 });
 
-var Puzzle = function(gaem, fin_cb, img_key, target_num_pieces){ // pw,ph){
+// howtocut is either a num_pieces target or a [width,height]
+// whattocut is {key:'scream'} or {color:blue, width:333,height:666}
+var Puzzle = function(gaem, fin_cb, what_to_cut, how_to_cut){
   "use strict";
   this.game = gaem;
   this.fin_cb= fin_cb;
   this.bg = this.game.add.tileSprite(0, 0, gaem.width, gaem.height, 'bg');
-  this.img = this.game.cache.getImage(img_key);
+  if (what_to_cut.key){
+    this.img = this.game.cache.getImage(what_to_cut.key);
+    this.pattern_type = "img";
+    this.iw = this.img.width; //300; //image size. as in, of all the pieces put together.
+    this.ih = this.img.height;
+  } else {
+    this.pattern_type = 'color';
+    this.pattern_color = what_to_cut.color || 'white';
+    this.iw = what_to_cut.width || 600;
+    this.ih = what_to_cut.height || 400;
+  };
 
-  var orig_iw = this.img.width; //300; //image size. as in, of all the pieces put together.
-  var orig_ih = this.img.height;
-  var aspect_ratio = orig_iw / orig_ih;
-  var pw = Math.round(Math.sqrt(target_num_pieces) * Math.sqrt(aspect_ratio));
-  var ph = Math.round(Math.sqrt(target_num_pieces) / Math.sqrt(aspect_ratio));
-  console.log(pw + 'x' + ph + '=' + pw*ph);
+  if (Array.isArray(how_to_cut)){
+    this.pw = how_to_cut[0];
+    this.ph = how_to_cut[1];
+  }
+  else { //howtocut is 80 or something, so try to cut around that many pieces
+    let target_num_pieces = how_to_cut;
+    let aspect_ratio = this.iw / this.ih;
+    let pw = Math.round(Math.sqrt(target_num_pieces) * Math.sqrt(aspect_ratio));
+    let ph = Math.round(Math.sqrt(target_num_pieces) / Math.sqrt(aspect_ratio));
+    console.log(pw + 'x' + ph + '=' + pw*ph);
 
-  this.ph = ph; // pieces wide/high, e.g. 15, 12
-  this.pw = pw;
+    this.ph = ph; // pieces wide/high, e.g. 15, 12
+    this.pw = pw;
+  }
 
-  var orig_area = orig_iw * orig_ih;
+  var orig_area = this.iw * this.ih;
   this.working_area = gaem.width * gaem.height;
   this.target_area = this.working_area * 0.8;
   // w*h * scale**2 = tw*th
   // scale**2 = tw*th/(w*h)
   // scale = sqrt(target_area / image_area)
   this.img_scale = Math.sqrt(this.target_area / orig_area);
-  this.target_iw = orig_iw * this.img_scale;
-  this.target_ih = orig_ih * this.img_scale;
-  //cw, ch: size of canvas in pixels.
-  //as in, the working area on which it's assembled by the player...
-  this.cw = 400;
-  this.ch = 400;
-  this.apw = this.target_iw / pw; // average piece width. not counting protrusions into neighboring pieces.
-  this.aph = this.target_ih / ph;
+  this.target_iw = this.iw * this.img_scale;
+  this.target_ih = this.ih * this.img_scale;
+  this.apw = this.target_iw / this.pw; // average piece width. not counting protrusions into neighboring pieces.
+  this.aph = this.target_ih / this.ph;
 
   var puz = this;
   this.group = this.game.add.group(); //all the pieces are in a group behind some gui stuff.
@@ -381,16 +394,14 @@ var Puzzle = function(gaem, fin_cb, img_key, target_num_pieces){ // pw,ph){
       //fill it in with the image or color
       context.save();
       context.lineWidth = 1.3 * (game.width / 800);
-
-      var spec = puz.game.getSpec();
-      if (spec.img_from == "solidcolor"){
-        context.fillStyle = "white";
+      if (puz.pattern_type == "color"){
+        context.fillStyle = puz.pattern_color;
       } else {
-        var img=puz.img;
+        let img=puz.img;
         context.translate(-piece_disp.x, -piece_disp.y);
         context.scale(puz.img_scale, puz.img_scale);
         context.lineWidth /= puz.img_scale;
-        var pat = context.createPattern(img, "no-repeat");
+        let pat = context.createPattern(img, "no-repeat");
         context.fillStyle = pat;
       }
       context.fill("evenodd");
@@ -465,9 +476,9 @@ var Puzzle = function(gaem, fin_cb, img_key, target_num_pieces){ // pw,ph){
   this.glob_layout = [];
 
   //initialize puzzle by generating pieces.
-  for (x = 0; x < pw; x++){
+  for (x = 0; x < this.pw; x++){
     this.glob_layout[x] = [];
-    for (y = 0; y < ph; y++){
+    for (y = 0; y < this.ph; y++){
       var borders = [
         horz_piece_borders[x][y],
         vert_piece_borders[x+1][y],
@@ -488,14 +499,14 @@ var Puzzle = function(gaem, fin_cb, img_key, target_num_pieces){ // pw,ph){
       glob.genSprite(this);
     }
   }
-  for (x = 0; x < pw-1; x++){
-    for (y = 0; y < ph; y++){
+  for (x = 0; x < this.pw-1; x++){
+    for (y = 0; y < this.ph; y++){
       this.glob_layout[x][y]._neighbors.push( this.glob_layout[x+1][y] );
       this.glob_layout[x+1][y]._neighbors.push( this.glob_layout[x][y] );
     }
   }
-  for (x = 0; x < pw; x++){
-    for (y = 0; y < ph-1; y++){
+  for (x = 0; x < this.pw; x++){
+    for (y = 0; y < this.ph-1; y++){
       this.glob_layout[x][y]._neighbors.push( this.glob_layout[x][y+1] );
       this.glob_layout[x][y+1]._neighbors.push( this.glob_layout[x][y] );
     }

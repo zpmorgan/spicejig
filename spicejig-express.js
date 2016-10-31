@@ -84,8 +84,8 @@ app.get('/blank', (req,res) => {
   req.session.blargles = 'foo';
   var spec = {
     img_from: 'solidcolor',
-    w: 100,
-    h: 100,
+    width: 100,
+    height: 100,
     pieces: 100,
   };
   if(req.query.pieces)
