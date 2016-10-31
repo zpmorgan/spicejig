@@ -122,7 +122,7 @@ rain.prototype = {
     let spec = game.getSpec();
     var picCB = Puzzle.genPieceCanvasBuffer(150, 'white', spec.perturbation);
     var tex = PIXI.Texture.fromCanvas(picCB.canvas);
-    this.game.add.sprite(100,100,tex);
+    this.game.add.sprite(300 - tex.width/2,300 - tex.height/2,tex);
     console.log(tex);
     console.log(game);
   }
