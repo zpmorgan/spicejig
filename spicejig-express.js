@@ -85,10 +85,13 @@ app.get('/t3/:t3id',userify,spec_params, function(req, res) {
 //squeerifier.squeerify
 //tileosqueequalizer
 //geomosquaralizor.geomosquaralize()
-app.get('/blank', userify, spec_params,(req,res) => {
+app.get('/blank/:color?', userify, spec_params,(req,res) => {
   console.log(req.session.id);
   req.session.blargles = 'foo';
   req.spec.img_from = 'solidcolor';
+  //req.spec.color = 'random';
+  if (req.params.color)
+    req.spec.color = req.params.color;
   req.spec.width = 100;
   req.spec.height= 100;
   res.render('puzzle.must', {title:'Blank Jigsaw', spec: JSON.stringify(req.spec), nomusic: true});

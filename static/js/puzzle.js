@@ -140,7 +140,6 @@ var Puzzle = function(gaem, fin_cb, what_to_cut, how_to_cut){
 
   this.squiggle = function(){
     let p = how_to_cut.perturbation || 0.115;
-    console.log(how_to_cut);
     var midpoint = new Phaser.Point(0.5, 0).perturb(p,0);
     var nubpoint = new Phaser.Point(midpoint.x, 0.3).perturb(0, p);
     var nubpoint_slope = new Phaser.Point(0.29,0).perturb(p, p/2);
@@ -397,7 +396,10 @@ var Puzzle = function(gaem, fin_cb, what_to_cut, how_to_cut){
       context.save();
       context.lineWidth = 1.3 * (game.width / 800);
       if (puz.pattern_type == "color"){
-        context.fillStyle = puz.pattern_color;
+        if (puz.pattern_color == "random")
+          context.fillStyle = '#'+Math.floor(Math.random()*16777215).toString(16);
+        else 
+          context.fillStyle = puz.pattern_color;
       } else {
         let img=puz.img;
         context.translate(-piece_disp.x, -piece_disp.y);

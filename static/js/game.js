@@ -104,10 +104,13 @@ playGame.prototype = {
     let spec = game.getSpec();
     let what_to_cut = {key:"scream"};
     if (spec.img_from == "solidcolor"){
-      what_to_cut = {color:"white", width:8, height:6}; //it scales anyways
+      what_to_cut = {width:8, height:6}; //it scales anyways
+      if(spec.color)
+        what_to_cut.color = spec.color;
     }
-    let how_to_cut = {};
-    how_to_cut.pieces = spec.pieces || 80;
+    let how_to_cut = {
+      pieces : spec.pieces || 80
+    };
     if(spec.perturbation)
       how_to_cut.perturbation = spec.perturbation;
     puzzle = new Puzzle(game, game.fin, what_to_cut, how_to_cut);
