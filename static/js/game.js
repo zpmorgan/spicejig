@@ -123,11 +123,38 @@ var rain = function(game){}
 rain.prototype = {
   create : function(){
     let spec = game.getSpec();
-    var picCB = Puzzle.genPieceCanvasBuffer(150, 'white', spec.perturbation);
-    var tex = PIXI.Texture.fromCanvas(picCB.canvas);
-    this.game.add.sprite(300 - tex.width/2,300 - tex.height/2,tex);
-    console.log(tex);
-    console.log(game);
+    var doit = function(){
+      //observer at u=0, v=0;
+      //higher v = further away, smaller
+      //v=1: size 25, v=0: size inf.
+      //v=1: speed 25; v=0: speed inf.
+      var u = Math.random() - .5;
+      var v = Math.random();
+      if (v < .1) { doit(); return;}//try again
+      var x = u / v;
+      x += .5;
+      x *= this.game.width;
+      var size = 25;
+      size /= v;
+      var speed = 25;
+      speed /= v;
+
+      var picCB = Puzzle.genPieceCanvasBuffer(size, 'random', spec.perturbation);
+      var tex = PIXI.Texture.fromCanvas(picCB.canvas);
+      //var piece = this.game.add.sprite(300 - tex.width/2,-100 - tex.height/2,tex);
+      var piece = this.game.add.sprite(x,-100 - tex.height/2,tex);
+      piece.anchor.x = 0.5;
+      piece.anchor.y = 0.5;
+      var tween = this.game.add.tween(piece).to({y:4*speed, angle:555}, 4000, null, true);
+      console.log(tex);
+      console.log(game);
+      tween.onComplete.add( ()=> {
+        piece.destroy();
+        doit();
+      }, this);
+    };
+    for (let i=0;i<50;i++)
+      doit();
   }
 }
 

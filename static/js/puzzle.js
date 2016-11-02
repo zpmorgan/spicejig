@@ -522,7 +522,7 @@ var Puzzle = function(gaem, fin_cb, what_to_cut, how_to_cut){
   }
 };
 Puzzle.genPieceCanvasBuffer = function(size, color, perturbation){
-  let what_to_cut = {color:'orange', width:size*3, height:size*3};
+  let what_to_cut = {color:color, width:size*3, height:size*3};
   let how_to_cut = {dims: [3,3]};
   if(perturbation)
     how_to_cut.perturbation = perturbation;
