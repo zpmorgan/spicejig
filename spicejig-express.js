@@ -15,12 +15,10 @@ app.use(express.static(__dirname + '/static'));
 
 var session = require('express-session');
 var FileStore = require('session-file-store')(session);
-let filestore_options = {
-  path : __dirname + '/sessions',
-  ttl : 3600 * 24 * 365 * 1000 // 1000 years.
-};
 app.use(session({
   store: new FileStore({path : __dirname + '/sessions'}),
+  ttl : 3600 * 24 * 365 * 1000, // 1000 years.
+  retries : 0,
   secret: config.secret,
   resave: true,
   saveUninitialized: true,
@@ -111,7 +109,7 @@ app.get('/t3_img/:t3id', (req,res) => {
   //Model.stream_t3pic(req.params.t3id)
   Model.fspath_t3pic(req.params.t3id)
     .then( fspath => {
-      res.sendfile(fspath);
+      res.sendFile(fspath);
       //res.setHeader("content-type", "image/jpeg");
       //stream.pipe(res);
     })
