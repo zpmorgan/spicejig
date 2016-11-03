@@ -397,7 +397,7 @@ var Puzzle = function(gaem, fin_cb, what_to_cut, how_to_cut){
       context.lineWidth = 1.3 * (game.width / 800);
       if (puz.pattern_type == "color"){
         if (puz.pattern_color == "random")
-          context.fillStyle = '#'+Math.floor(Math.random()*16777215).toString(16);
+          context.fillStyle = "#000000".replace(/0/g,function(){return (~~(Math.random()*16)).toString(16);});
         else 
           context.fillStyle = puz.pattern_color;
       } else {
