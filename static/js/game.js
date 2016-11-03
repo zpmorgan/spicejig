@@ -127,7 +127,7 @@ rain.prototype = {
       //observer at u=0, v=0;
       //higher v = further away, smaller
       //v=1: size 25, v=0: size inf.
-      //v=1: speed 25; v=0: speed inf.
+      //v=1: dur 10 secs; v=0: dur 0.
       var u = Math.random() - .5;
       var v = Math.random();
       if (v < .1) { doit(); return;}//try again
@@ -136,24 +136,26 @@ rain.prototype = {
       x *= this.game.width;
       var size = 25;
       size /= v;
-      var speed = 25;
-      speed /= v;
+      var dur = 10;
+      dur *= v;
 
       var picCB = Puzzle.genPieceCanvasBuffer(size, 'random', spec.perturbation);
       var tex = PIXI.Texture.fromCanvas(picCB.canvas);
       //var piece = this.game.add.sprite(300 - tex.width/2,-100 - tex.height/2,tex);
-      var piece = this.game.add.sprite(x,-100 - tex.height/2,tex);
+      var piece = this.game.add.sprite(x, - tex.height/2,tex);
+      piece.angle = Math.random() * 360;
       piece.anchor.x = 0.5;
       piece.anchor.y = 0.5;
-      var tween = this.game.add.tween(piece).to({y:4*speed, angle:555}, 4000, null, true);
-      console.log(tex);
-      console.log(game);
+      var tween = this.game.add.tween(piece).to({
+          y:this.game.height+piece.height/2,
+          angle:(Math.random()+.5)*220*dur},
+        dur*1000, null, true);
       tween.onComplete.add( ()=> {
         piece.destroy();
         doit();
       }, this);
     };
-    for (let i=0;i<50;i++)
+    for (let i=0;i<200;i++)
       doit();
   }
 }
