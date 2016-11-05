@@ -157,7 +157,70 @@ rain.prototype = {
     };
     for (let i=0;i<200;i++)
       doit();
+
+    var menu_html  =  "<a class='menu' onclick='GUI.new_puz();'> New Puzzle </a>";
+    menu_html += "<br> <a class='menu' onclick='GUI.blank_puz();'> Blank Puzzle </a>";
+    menu_html += "<br> <a class='menu' onclick='GUI.disp_halp();'> Help </a>";
+    menu_html += "<br> <a class='menu' onclick='GUI.disp_credits();'> Credits </a>";
+    GUI.impose_center_dom_box(menu_html);
   }
+}
+GUI = {};
+GUI.imposition_stack = [];
+GUI.top_imposition_elem = function(){
+  return GUI.imposition_stack[GUI.imposition_stack.length-1];
+};
+GUI.clear_imposition_stack = function(){
+  while(GUI.imposition_stack.length > 0)
+    GUI.pop_center_dom_box();
+};
+
+GUI.push_center_dom_box = function(html){
+  if(GUI.imposition_stack.length > 0)
+    GUI.top_imposition_elem().style.display = "none";
+  html = '<a class="boxclose" onClick="GUI.pop_center_dom_box();" id="boxclose"></a>' + html;
+  var box = GUI.center_dom_box(html);
+  GUI.imposition_stack.push(box);
+  return box;
+};
+GUI.impose_center_dom_box = function(html){
+  var box = GUI.center_dom_box(html);
+  GUI.imposition_stack = [box];
+  return box;
+};
+GUI.pop_center_dom_box = function(){
+  var box = GUI.imposition_stack.pop();
+  box.parentNode.removeChild(box);
+  if(GUI.imposition_stack.length > 0)
+    GUI.top_imposition_elem().style.display = "block";
+};
+
+
+GUI.center_dom_box = function(html){
+  var div = document.createElement('div');
+  div.className = 'imposition';
+  div.style.color = "#ffffff";
+  div.innerHTML = html;
+  document.body.appendChild(div);
+  return div;
+}
+
+
+GUI.disp_credits = function(){
+  var credits_html = "Music: Di0nysys - Way of the Sword </br> "
+    + '<a href="https://soundcloud.com/di0/di0nysus-way-of-the-sword">https://soundcloud.com/di0/di0nysus-way-of-the-sword</a> <br>'
+    + 'Licensed under CC-BY';
+  GUI.push_center_dom_box(credits_html);
+};
+GUI.disp_halp = function(){
+  var halp_html = "It's a jigsaw puzzle. Put the pieces together."
+    GUI.push_center_dom_box(halp_html);
+};
+GUI.blank_puz = function(){
+  GUI.clear_imposition_stack();
+}
+GUI.new_puz = function(){
+  GUI.clear_imposition_stack();
 }
 
 
