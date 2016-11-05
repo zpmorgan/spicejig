@@ -53,13 +53,13 @@ var spec_params = function(req,res,next){
 // make it rain
 app.get('/rain',userify,spec_params, function(req, res) {
   //res.sendFile(__dirname + '/static/puzzle.html');
-  req.spec.source = "rain";
+  req.spec.img_from = "rain";
   res.render('puzzle.must', {title:'Make it rain', spec: JSON.stringify(req.spec), nomusic:true});
 });
 
 app.get('/',userify,spec_params, function(req, res) {
   //res.sendFile(__dirname + '/static/puzzle.html');
-  req.spec.source = "random";
+  req.spec.img_from= "random";
   res.render('puzzle.must', {title:'Jigsaw', spec: JSON.stringify(req.spec)});
 });
 
@@ -146,7 +146,7 @@ app.get('/t3_img/:t3id', (req,res) => {
   //res.sendFile('/home/zach/codestuff/scratch/spicejig/' + 'static/images/scream.jpg');
 });
 
-app.get('/new_puz_spec', userify, function(req,res){
+app.get('/rand_puz_t3', userify, function(req,res){
   var p = new Promise( (resolve,reject) => {
     req.user.rand_unfinished_t3().then( (tng) => {
       tng.img_from = 'reddit';

@@ -3,9 +3,9 @@ var puzzle;
 
 //maybe the spec is supplied directly
 //or maybe we have to source it from /new_puz_spec
-var source_spec = G.spec.source == "random" ? true : false;
-var rain_spec = G.spec.source == "rain" ? true : false;
-var blank_spec = G.spec.img_from == "solidcolor" ? true : false;
+var rand_spec = G.spec.img_from == "random" ? true : false;
+var rain_spec = G.spec.img_from == "rain" ? true : false;
+//var blank_spec = G.spec.img_from == "solidcolor" ? true : false;
 
 requirejs(['domReady', 'phaser', 'puzzle'], function(domReady){
   domReady(function() {
@@ -28,8 +28,8 @@ requirejs(['domReady', 'phaser', 'puzzle'], function(domReady){
         game.soundBtn.loadTexture("playbutton", 0);
       }
     }
-    game.getSpec = function(){
-      if (source_spec == false)
+    game.FOOgetSpec = function(){
+      if (rand_spec == false)
         return G.spec;
       return game.cache.getJSON('spec');
     }
@@ -59,16 +59,15 @@ var boot = function(game){}
 
 boot.prototype = {
   preload: function(){
-    if (source_spec)
-      game.load.json('spec', '/new_puz_spec');
+    if (rand_spec)
+      game.load.json('t3', '/rand_puz_t3');
     game.load.image('playbutton', '/images/play.png');
     game.load.image('pausebutton', '/images/pause.png');
     game.load.audio('victorysound', '/victory.mp3');
   },
   create: () => {
-    if(source_spec)
-      if(G.spec.pieces)
-        game.getSpec().pieces = G.spec.pieces;
+    if(rand_spec)
+      G.spec.t3 = game.cache.getJSON('t3');
 
     game.state.start('PlayGame');
   }
@@ -79,9 +78,9 @@ var playGame = function(game){}
 playGame.prototype = {
 	preload: function(){
     //game.load.image("scream", "images/scream.jpg");
-    var spec = game.getSpec();
-    if (spec.img_from == "reddit")
-      game.load.image('scream', '/t3_img/' + spec.data.id);
+    var spec = G.spec;
+    if (spec.img_from == "random")
+      game.load.image('scream', '/t3_img/' + G.spec.t3.data.id);
     else if (spec.img_from == "scream")
       game.load.image("scream", "images/scream.jpg");
     else if (spec.img_from == "solidcolor"){
@@ -101,7 +100,7 @@ playGame.prototype = {
     game.canvas.oncontextmenu = function (e) { e.preventDefault(); }
     game.bg = game.add.tileSprite(0, 0, game.width, game.height, 'bg');
 
-    let spec = game.getSpec();
+    let spec = G.spec;
     let what_to_cut = {key:"scream"};
     if (spec.img_from == "solidcolor"){
       what_to_cut = {width:8, height:6}; //it scales anyways
@@ -122,7 +121,7 @@ playGame.prototype = {
 var rain = function(game){}
 rain.prototype = {
   create : function(){
-    let spec = game.getSpec();
+    let spec = G.spec;
     var doit = function(){
       //observer at u=0, v=0;
       //higher v = further away, smaller
@@ -223,6 +222,9 @@ GUI.new_puz = function(){
   GUI.clear_imposition_stack();
 }
 
+GUI.add_audio = function(){
+
+}
 
 
 
