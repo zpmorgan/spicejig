@@ -3,7 +3,7 @@ var puzzle;
 
 //maybe the spec is supplied directly
 //or maybe we have to source it from /new_puz_spec
-var rand_spec = G.spec.img_from == "random" ? true : false;
+//var rand_spec = G.spec.img_from == "random" ? true : false;
 var rain_spec = G.spec.img_from == "rain" ? true : false;
 //var blank_spec = G.spec.img_from == "solidcolor" ? true : false;
 
@@ -27,11 +27,6 @@ requirejs(['domReady', 'phaser', 'puzzle'], function(domReady){
         audio.pause();
         game.soundBtn.loadTexture("playbutton", 0);
       }
-    }
-    game.FOOgetSpec = function(){
-      if (rand_spec == false)
-        return G.spec;
-      return game.cache.getJSON('spec');
     }
   });
 });
@@ -59,14 +54,14 @@ var boot = function(game){}
 
 boot.prototype = {
   preload: function(){
-    if (rand_spec)
+    if (G.spec.img_from == "random")
       game.load.json('t3', '/rand_puz_t3');
     game.load.image('playbutton', '/images/play.png');
     game.load.image('pausebutton', '/images/pause.png');
     game.load.audio('victorysound', '/victory.mp3');
   },
   create: () => {
-    if(rand_spec)
+    if (G.spec.img_from == "random")
       G.spec.t3 = game.cache.getJSON('t3');
 
     game.state.start('PlayGame');
@@ -217,9 +212,13 @@ GUI.disp_halp = function(){
 };
 GUI.blank_puz = function(){
   GUI.clear_imposition_stack();
+  G.spec = {img_from : 'solidcolor', color:'white'};
+  game.state.start('Boot');
 }
 GUI.new_puz = function(){
   GUI.clear_imposition_stack();
+  G.spec = {img_from : 'random'};
+  game.state.start('Boot');
 }
 
 GUI.add_audio = function(){
