@@ -17,17 +17,6 @@ requirejs(['domReady', 'phaser', 'puzzle'], function(domReady){
       game.state.start("Rain");
     else 
       game.state.start("Boot");
-    game.playPause = function(){
-      var audio = document.getElementById("musick");
-      if (audio.paused){
-        audio.play();
-        game.soundBtn.key = "pausebutton";
-        game.soundBtn.loadTexture("pausebutton", 0);
-      } else {
-        audio.pause();
-        game.soundBtn.loadTexture("playbutton", 0);
-      }
-    }
   });
 });
 
@@ -72,6 +61,7 @@ boot.prototype = {
 var playGame = function(game){}
 playGame.prototype = {
 	preload: function(){
+    GUI.add_audio('/Di0nysys-Way-of-the-Sword');
     //game.load.image("scream", "images/scream.jpg");
     var spec = G.spec;
     if (spec.img_from == "random")
@@ -108,9 +98,7 @@ playGame.prototype = {
     if(spec.perturbation)
       how_to_cut.perturbation = spec.perturbation;
     puzzle = new Puzzle(game, game.fin, what_to_cut, how_to_cut);
-    game.soundBtn = this.add.button(20,20,'pausebutton', game.playPause, this,null,null,null);
-    game.soundBtn.width = 55;
-    game.soundBtn.height= 55;
+    GUI.add_sound_button();
   }
 }
 var rain = function(game){}
@@ -155,8 +143,10 @@ rain.prototype = {
     var menu_html  =  "<a class='menu' onclick='GUI.new_puz();'> New Puzzle </a>";
     menu_html += "<br> <a class='menu' onclick='GUI.blank_puz();'> Blank Puzzle </a>";
     menu_html += "<br> <a class='menu' onclick='GUI.disp_halp();'> Help </a>";
-    menu_html += "<br> <a class='menu' onclick='GUI.disp_credits();'> Credits </a>";
+    menu_html += "<br> <a class='menu' onclick='GUI.disp_credits();'> Music Credits </a>";
     GUI.impose_center_dom_box(menu_html);
+    //GUI.add_audio('/Di0nysys-Way-of-the-Sword');
+    GUI.add_audio('/Psychedelic Neon - Rain on Snow (Shame Odyssey Remix)');
   }
 }
 GUI = {};
@@ -204,6 +194,9 @@ GUI.disp_credits = function(){
   var credits_html = "Music: Di0nysys - Way of the Sword </br> "
     + '<a href="https://soundcloud.com/di0/di0nysus-way-of-the-sword">https://soundcloud.com/di0/di0nysus-way-of-the-sword</a> <br>'
     + 'Licensed under CC-BY';
+  credits_html += "<br><br> Psychedelic Neon - Rain on Snow (Shame Odyssey Remix) </br> "
+    + '<a href="https://soundcloud.com/shameodyssey/psychedelic-neon-rain-on-snow">https://soundcloud.com/shameodyssey/psychedelic-neon-rain-on-snow</a> <br>'
+    + 'Licensed under CC-BY';
   GUI.push_center_dom_box(credits_html);
 };
 GUI.disp_halp = function(){
@@ -221,8 +214,36 @@ GUI.new_puz = function(){
   game.state.start('Boot');
 }
 
-GUI.add_audio = function(){
-
+GUI.add_audio = function(filename_base){ // assume ogg & mp3
+  if(GUI.audio_elem)
+    GUI.audio_elem.parentNode.removeChild(GUI.audio_elem);
+  var audio = document.createElement('audio');
+  var src_html = '';
+  src_html += '<source src="' + filename_base + '.mp3" type="audio/mpeg">';
+  src_html += '<source src="' + filename_base + '.ogg" type="audio/ogg">';
+  audio.innerHTML = src_html;
+  audio.autoplay = true;
+  audio.loop = true;
+  audio.id = 'musick';
+  document.body.appendChild(audio);
+  GUI.audio_elem = audio;
+}
+GUI.playPause = function(){
+  //var audio = document.getElementById("musick");
+  var audio = GUI.audio_elem;
+  if (audio.paused){
+    audio.play();
+    game.soundBtn.key = "pausebutton";
+    game.soundBtn.loadTexture("pausebutton", 0);
+  } else {
+    audio.pause();
+    game.soundBtn.loadTexture("playbutton", 0);
+  }
+}
+GUI.add_sound_button = function(){
+  game.soundBtn = game.add.button(20,20,'pausebutton', GUI.playPause, this,null,null,null);
+  game.soundBtn.width = 55;
+  game.soundBtn.height= 55;
 }
 
 

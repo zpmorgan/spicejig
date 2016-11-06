@@ -42,6 +42,12 @@
       .boxclose:before {
         content: "×";
       }
+      a:link {
+        color: orange;
+      }
+      a:visited {
+        color: yellowgreen;
+      }
     </style>
     <script> //global stuff G
       var G = {};
@@ -49,14 +55,5 @@
     </script>
   </head>
   <body>
-    {{^nomusic}}
-    <audio loop autoplay id="musick">
-      <!-- music by di0 on soundcloud
-        https://soundcloud.com/di0/di0nysus-way-of-the-sword
-        CC-BY -->
-      <source src="/Di0nysys-Way-of-the-Sword.mp3" type="audio/ogg">
-      <source src="/Di0nysys-Way-of-the-Sword.ogg" type="audio/mpeg">
-    </audio>
-    {{/nomusic}}
   </body>
 </html>
