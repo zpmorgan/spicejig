@@ -16,9 +16,11 @@ app.use(express.static(__dirname + '/static'));
 var session = require('express-session');
 var FileStore = require('session-file-store')(session);
 app.use(session({
-  store: new FileStore({path : __dirname + '/sessions'}),
-  ttl : 3600 * 24 * 365 * 1000, // 1000 years.
-  retries : 0,
+  store: new FileStore({
+    path : __dirname + '/sessions',
+    ttl : 3600 * 24 * 365 * 1000, // 1000 years.
+    retries : 0,
+  }),
   secret: config.secret,
   resave: true,
   saveUninitialized: true,
