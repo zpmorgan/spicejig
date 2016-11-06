@@ -105,7 +105,8 @@ var rain = function(game){}
 rain.prototype = {
   create : function(){
     let spec = G.spec;
-    var doit = function(){
+    let gauss01 = gaussian(0,1);
+    let doit = function(){
       //observer at u=0, v=0;
       //higher v = further away, smaller
       //v=1: size 25, v=0: size inf.
@@ -130,7 +131,7 @@ rain.prototype = {
       piece.anchor.y = 0.5;
       var tween = this.game.add.tween(piece).to({
           y:this.game.height+piece.height/2,
-          angle:(Math.random()+.5)*220*dur},
+          angle:(gauss01()+2)*90*dur},
         dur*1000, null, true);
       tween.onComplete.add( ()=> {
         piece.destroy();
