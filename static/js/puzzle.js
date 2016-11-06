@@ -443,6 +443,7 @@ var Puzzle = function(gaem, fin_cb, what_to_cut, how_to_cut){
   var corner_ids = 0;
   var piece_corners = [];
   var x,y;
+  var cp = .06; // corner perturbation
   for (x=0; x<=this.pw; x++){
     piece_corners.push([]);
     for (y=0; y<=this.ph; y++){
@@ -450,6 +451,10 @@ var Puzzle = function(gaem, fin_cb, what_to_cut, how_to_cut){
       var iy = this.aph * y;
       piece_corners[x][y] = new Phaser.Point(ix,iy);
       piece_corners[x][y].id = corner_ids++;
+      if (x != 0 && x != this.pw)
+        piece_corners[x][y].perturb(this.apw*cp,0);
+      if (y != 0 && y != this.ph)
+        piece_corners[x][y].perturb(0,this.aph*cp);
     }
   }
   //console.log(piece_corners);
