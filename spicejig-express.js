@@ -53,14 +53,12 @@ var spec_params = function(req,res,next){
 };
 
 // make it rain
-app.get('/rain',userify,spec_params, function(req, res) {
-  //res.sendFile(__dirname + '/static/puzzle.html');
+app.get('/',userify,spec_params, function(req, res) {
   req.spec.img_from = "rain";
-  res.render('puzzle.must', {title:'Make it rain', spec: JSON.stringify(req.spec), nomusic:true});
+  res.render('puzzle.must', {title:'The Dark Souls of casual jigsaw games', spec: JSON.stringify(req.spec)});
 });
 
-app.get('/',userify,spec_params, function(req, res) {
-  //res.sendFile(__dirname + '/static/puzzle.html');
+app.get('/random',userify,spec_params, function(req, res) {
   req.spec.img_from= "random";
   res.render('puzzle.must', {title:'Jigsaw', spec: JSON.stringify(req.spec)});
 });
@@ -77,14 +75,6 @@ app.get('/t3/:t3id',userify,spec_params, function(req, res) {
   });
 });
 
-//geometryitudeificatoralizor
-//squarifaciareifier
-//squaritudeifier
-//squaritizationalizor
-//geomitificilator
-//squeerifier.squeerify
-//tileosqueequalizer
-//geomosquaralizor.geomosquaralize()
 app.get('/blank/:color?', userify, spec_params,(req,res) => {
   console.log(req.session.id);
   req.session.blargles = 'foo';
@@ -94,7 +84,7 @@ app.get('/blank/:color?', userify, spec_params,(req,res) => {
     req.spec.color = req.params.color;
   req.spec.width = 100;
   req.spec.height= 100;
-  res.render('puzzle.must', {title:'Blank Jigsaw', spec: JSON.stringify(req.spec), nomusic: true});
+  res.render('puzzle.must', {title:'Blank Jigsaw', spec: JSON.stringify(req.spec)});
 });
 app.get('/scream', userify, spec_params, (req,res) => {
   req.spec.img_from = "scream";

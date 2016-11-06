@@ -48,6 +48,9 @@
       a:visited {
         color: yellowgreen;
       }
+      a.menu {
+        font-size: x-large;
+      }
     </style>
     <script> //global stuff G
       var G = {};
