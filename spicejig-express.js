@@ -141,7 +141,6 @@ app.get('/t3_img/:t3id', (req,res) => {
 app.get('/rand_puz_t3', userify, function(req,res){
   var p = new Promise( (resolve,reject) => {
     req.user.rand_unfinished_t3().then( (tng) => {
-      tng.img_from = 'reddit';
       resolve(tng);
     }).catch( err=>{ reject(err + '.p3p3') });;
   });

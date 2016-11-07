@@ -76,9 +76,10 @@ playGame.prototype = {
 
     game.fin = function(){
       game.sound.play('victorysound');
-      if(spec.img_from === 'reddit')
-        loadJSON('fin/' + spec.data.id); // just report the fin
+      if(spec.img_from === 'random')
+        loadJSON('fin/' + spec.t3.data.id); // just report the fin
       console.log('fin');
+      GUI.add_art_info_button();
     };
 	},
 	create: function(){
@@ -228,7 +229,7 @@ GUI.add_audio = function(filename_base){ // assume ogg & mp3
   audio.id = 'musick';
   document.body.appendChild(audio);
   GUI.audio_elem = audio;
-}
+};
 GUI.playPause = function(){
   //var audio = document.getElementById("musick");
   var audio = GUI.audio_elem;
@@ -240,12 +241,36 @@ GUI.playPause = function(){
     audio.pause();
     game.soundBtn.loadTexture("playbutton", 0);
   }
-}
-GUI.add_sound_button = function(){
+};
+GUI.add_sound_button = function(){ // 🔇 🔊
   game.soundBtn = game.add.button(20,20,'pausebutton', GUI.playPause, this,null,null,null);
   game.soundBtn.width = 55;
   game.soundBtn.height= 55;
-}
+};
 
+GUI.add_art_info_button = function(){
+  var div = document.createElement('div');
+  div.className = 'GUI';
+  div.innerHTML = "ⓘ";
+  div.style.position = 'fixed';
+  div.style.left = "50%";
+  div.style.transform = "translate(-50%)";
+  div.style.top = 0;
+  div.style['font-size'] = '88px';
+  div.onclick = GUI.disp_art_credits;
+  document.body.appendChild(div);
+};
+GUI.disp_art_credits = function(){
+  GUI.clear_imposition_stack();
+  var credit_html = "Whoop de doo for you!";
+  if(G.spec.img_from == 'random'){
+    credit_html = "Art Credit:";
+    console.log(G.spec.t3);
+    credit_html += '<br> '+ G.spec.t3.data.title;
+    credit_html += '<br> <a href="https://reddit.com'+ G.spec.t3.data.permalink + '">Reddit link</a>';
+    credit_html += '<br> <a href="'+ G.spec.t3.data.url + '">Original link</a>';
+  }
+  GUI.push_center_dom_box(credit_html);
+};
 
 
