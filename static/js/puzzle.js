@@ -48,10 +48,11 @@ require(['phaser'], function(){
 
 // howtocut is either a num_pieces target or a [width,height]
 // whattocut is {key:'scream'} or {color:blue, width:333,height:666}
-var Puzzle = function(gaem, fin_cb, what_to_cut, how_to_cut){
+var Puzzle = function(gaem, what_to_cut, how_to_cut){
   "use strict";
   this.game = gaem;
-  this.fin_cb= fin_cb;
+  this.fin_cb= function(){};
+  this.glom_cb = function(){};
   if (what_to_cut.key){
     this.img = this.game.cache.getImage(what_to_cut.key);
     this.pattern_type = "img";
@@ -259,6 +260,7 @@ var Puzzle = function(gaem, fin_cb, what_to_cut, how_to_cut){
       puz.n_globs--;
       if (puz.n_globs == 1) //victory, whoop de doo!
         puz.fin_cb();
+      puz.glom_cb();
     };
 
     this.checkForGlomming = function(){
@@ -531,7 +533,7 @@ Puzzle.genPieceCanvasBuffer = function(size, color, perturbation){
   let how_to_cut = {dims: [3,3]};
   if(perturbation)
     how_to_cut.perturbation = perturbation;
-  let p= new Puzzle(null, null, what_to_cut, how_to_cut);
+  let p= new Puzzle(null, what_to_cut, how_to_cut);
   return p.glob_layout[1][1].genTexture();
 
 };

@@ -48,6 +48,7 @@ boot.prototype = {
     game.load.image('playbutton', '/images/play.png');
     game.load.image('pausebutton', '/images/pause.png');
     game.load.audio('victorysound', '/victory.mp3');
+    game.load.audio('golf-swing', '/sport_golf_swing_club_hit_ball_002.mp3');
   },
   create: () => {
     if (G.spec.img_from == "random")
@@ -74,13 +75,6 @@ playGame.prototype = {
       console.error( 'from whence it from?' );
     game.load.image('bg', '/images/bg.jpg');
 
-    game.fin = function(){
-      game.sound.play('victorysound');
-      if(spec.img_from === 'random')
-        loadJSON('fin/' + spec.t3.data.id); // just report the fin
-      console.log('fin');
-      GUI.add_art_info_button();
-    };
 	},
 	create: function(){
     game.canvas.oncontextmenu = function (e) { e.preventDefault(); }
@@ -98,7 +92,17 @@ playGame.prototype = {
     };
     if(spec.perturbation)
       how_to_cut.perturbation = spec.perturbation;
-    puzzle = new Puzzle(game, game.fin, what_to_cut, how_to_cut);
+    puzzle = new Puzzle(game, what_to_cut, how_to_cut);
+    puzzle.fin_cb = function(){
+      game.sound.play('victorysound');
+      if(spec.img_from === 'random')
+        loadJSON('fin/' + spec.t3.data.id); // just report the fin
+      console.log('fin');
+      GUI.add_art_info_button();
+    };
+    puzzle.glom_cb = function(){
+      game.sound.play('golf-swing');
+    }
     GUI.add_sound_button();
   }
 }
@@ -225,6 +229,7 @@ GUI.add_audio = function(filename_base){ // assume ogg & mp3
   src_html += '<source src="' + filename_base + '.ogg" type="audio/ogg">';
   audio.innerHTML = src_html;
   audio.autoplay = true;
+  audio.volume = .07;
   audio.loop = true;
   audio.id = 'musick';
   document.body.appendChild(audio);
