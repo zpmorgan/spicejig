@@ -1,7 +1,25 @@
 <!DOCTYPE HTML>
 <html>
   <head>
-		<script data-main="/js/game" src="/js/require.js"></script>
+    <script>
+      var require = {
+        //baseUrl: "/",
+        deps: ['domReady', 'phaser', 'game', 'puzzle'],
+        paths: {
+          js: 'foo',
+          domReady: '/js/domReady',
+          phaser: '/js/phaser',
+          game: '/skrpt/game',
+          puzzle: '/skrpt/puzzle',
+        },
+        callback: function(domready,ph,ga,pu){
+          STARTWHENREADY(domready);
+        },
+      };
+    </script>
+
+    <!--<script data-main="/skrpt/game.js" src="/js/require.js"></script>-->
+		<script src="/js/require.js"></script>
     <title>{{title}}</title>
     <style>
       body {

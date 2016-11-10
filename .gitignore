@@ -3,3 +3,5 @@
 phaser-*
 node_modules
 sessions
+dist
+

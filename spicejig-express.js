@@ -12,6 +12,7 @@ try {
 var express = require('express');
 var app = express();
 app.use(express.static(__dirname + '/static'));
+app.use('/skrpt', express.static(__dirname + '/dist'));
 
 var session = require('express-session');
 var FileStore = require('session-file-store')(session);
