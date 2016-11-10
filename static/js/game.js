@@ -94,7 +94,8 @@ playGame.prototype = {
       how_to_cut.perturbation = spec.perturbation;
     puzzle = new Puzzle(game, what_to_cut, how_to_cut);
     puzzle.fin_cb = function(){
-      game.sound.play('victorysound');
+      GUI.add_audio('in-search-of-asia');
+      //game.sound.play('victorysound');
       if(spec.img_from === 'random')
         loadJSON('fin/' + spec.t3.data.id); // just report the fin
       console.log('fin');
@@ -203,6 +204,8 @@ GUI.disp_credits = function(){
   credits_html += "<br><br> Psychedelic Neon - Rain on Snow (Shame Odyssey Remix) </br> "
     + '<a href="https://soundcloud.com/shameodyssey/psychedelic-neon-rain-on-snow">https://soundcloud.com/shameodyssey/psychedelic-neon-rain-on-snow</a> <br>'
     + 'Licensed under CC-BY';
+  credits_html += "<br><br> In Search Of Asia </br> "
+    + 'provided by <a href="http://www.zapsplat.com/music/in-search-of-asia-asian-influenced-percussion-driven-track-with-japanese-koto-melody-haunting-choir-and-strings/">ZapSplat</a>';
   GUI.push_center_dom_box(credits_html);
 };
 GUI.disp_halp = function(){
