@@ -6,6 +6,7 @@ try {
   console.log('config not found.');
   config = {
     secret: 'lkasjdhfgkjlhafdgiludfha98fha98hf9agh',
+    env: 'dev',
   }
 }
 
@@ -56,12 +57,12 @@ var spec_params = function(req,res,next){
 // make it rain
 app.get('/',userify,spec_params, function(req, res) {
   req.spec.img_from = "rain";
-  res.render('puzzle.must', {title:'The Dark Souls of casual jigsaw games', spec: JSON.stringify(req.spec)});
+  res.render('puzzle.must', {title:'The Dark Souls of casual jigsaw games', spec: JSON.stringify(req.spec), env: config.env});
 });
 
 app.get('/random',userify,spec_params, function(req, res) {
   req.spec.img_from= "random";
-  res.render('puzzle.must', {title:'Jigsaw', spec: JSON.stringify(req.spec)});
+  res.render('puzzle.must', {title:'Jigsaw', spec: JSON.stringify(req.spec), env: config.env});
 });
 
 app.get('/t3/:t3id',userify,spec_params, function(req, res) {
@@ -69,7 +70,7 @@ app.get('/t3/:t3id',userify,spec_params, function(req, res) {
     var spec = t3;
     spec.img_from = 'reddit';
     for (var attrname in req.spec) { spec[attrname] = req.spec[attrname]; }
-    res.render('puzzle.must', {title:'Jigsaw', spec: JSON.stringify(spec)});
+    res.render('puzzle.must', {title:'Jigsaw', spec: JSON.stringify(spec), env: config.env});
   }).catch( err => {
     console.log(err);
     res.json(err);
@@ -85,11 +86,11 @@ app.get('/blank/:color?', userify, spec_params,(req,res) => {
     req.spec.color = req.params.color;
   req.spec.width = 100;
   req.spec.height= 100;
-  res.render('puzzle.must', {title:'Blank Jigsaw', spec: JSON.stringify(req.spec)});
+  res.render('puzzle.must', {title:'Blank Jigsaw', spec: JSON.stringify(req.spec), env: config.env});
 });
 app.get('/scream', userify, spec_params, (req,res) => {
   req.spec.img_from = "scream";
-  res.render('puzzle.must', {title:'😱 😱 😱 😱 😱', spec: JSON.stringify(req.spec)});
+  res.render('puzzle.must', {title:'😱 😱 😱 😱 😱', spec: JSON.stringify(req.spec), env: config.env});
 });
 
 app.get('/scrapereddit', function(req,res){

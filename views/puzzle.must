@@ -73,6 +73,7 @@
     <script> //global stuff G
       var G = {};
       G.spec = {{&spec}};
+      G.env = "{{env}}";
     </script>
   </head>
   <body>
