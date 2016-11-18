@@ -78,6 +78,14 @@ app.get('/t3/:t3id',userify,spec_params, function(req, res) {
   });
 });
 
+app.get('/t3data/:t3id', userify, (req,res) => {
+  Model.t3_from_db(req.params.t3id).then(t3 => {
+    //this somehow makes it pretty in the browser.
+    res.set({'Content-Type': 'application/json; charset=utf-8'}).send(200, JSON.stringify(t3, undefined, ' '));
+  })
+  .catch( err => {res.json(err)});
+});
+
 app.get('/blank/:color?', userify, spec_params,(req,res) => {
   console.log(req.session.id);
   req.session.blargles = 'foo';
@@ -125,6 +133,7 @@ app.get('/rand_puz_t3/', userify, function(req,res){
   p.then( (tng) => {res.json(tng)});
   p.catch( err => {res.json(err + '.dadadadada')});
 });
+
 
 app.get('/fin/:t3id', userify, (req,res) => {
   req.user.fin_t3(req.params.t3id).then( fins => {
