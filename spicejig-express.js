@@ -67,9 +67,10 @@ app.get('/random',userify,spec_params, function(req, res) {
 
 app.get('/t3/:t3id',userify,spec_params, function(req, res) {
   Model.t3_from_db(req.params.t3id).then(t3 => {
-    var spec = t3;
+    var spec = {};
     spec.img_from = 'reddit';
-    for (var attrname in req.spec) { spec[attrname] = req.spec[attrname]; }
+    spec.t3 = t3;
+    //for (var attrname in req.spec) { spec[attrname] = req.spec[attrname]; }
     res.render('puzzle.must', {title:'Jigsaw', spec: JSON.stringify(spec), env: config.env});
   }).catch( err => {
     console.log(err);
