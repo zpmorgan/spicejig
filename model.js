@@ -26,9 +26,15 @@ Model.refresh_selektion = function(){
       r_c.srandmember('t3_set', 40, (err,t3ids) => {
         if(err) {rej(err+".vbvbvb");return};
         r_c.hmget('t3', t3ids, (err,t3s) => {
+          if(err) {rej(err+".8d8d8d");return};
           for (let i=0; i < t3s.length; i++)
             t3s[i] = JSON.parse(t3s[i]);
-          if(err) {rej(err+".8d8d8d");return};
+          //filter out nsfw
+          t3s = t3s.filter( t3 => {
+            if(t3.data.thumbnail === 'nsfw')
+              return false;
+            return true;
+          });
           let totscore = 0;
           for(let t3 of t3s){
             totscore += t3.data.score;
