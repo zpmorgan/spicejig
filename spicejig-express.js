@@ -81,7 +81,7 @@ app.get('/t3/:t3id',userify,spec_params, function(req, res) {
 app.get('/t3data/:t3id', userify, (req,res) => {
   Model.t3_from_db(req.params.t3id).then(t3 => {
     //this somehow makes it pretty in the browser.
-    res.set({'Content-Type': 'application/json; charset=utf-8'}).send(200, JSON.stringify(t3, undefined, ' '));
+    res.set({'Content-Type': 'application/json; charset=utf-8'}).status(200).send(JSON.stringify(t3, undefined, ' '));
   })
   .catch( err => {res.json(err)});
 });
