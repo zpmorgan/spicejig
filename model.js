@@ -20,10 +20,20 @@ Model.rand_subreddit_url = function(){
   return url;
 };
 
-Model.refresh_selektion = function(){
+function normalize(p){
+  var magnitude = Math.sqrt(p[0]*p[0] + p[1]*p[1]);
+  return [p[0]/magnitude, p[1]/magnitude];
+};
+function dot(p1,p2){
+  return p1[0]*p2[0] + p1[1]*p2[1];
+}
+
+Model.refresh_selektion = function(dims){
   return new Promise( (reso,rej) => {
+    if (!dims)
+      rej('no dims')
     Model.scrape_reddit_if_timely().then( () => {
-      r_c.srandmember('t3_set', 40, (err,t3ids) => {
+      r_c.srandmember('t3_set', 60, (err,t3ids) => {
         if(err) {rej(err+".vbvbvb");return};
         r_c.hmget('t3', t3ids, (err,t3s) => {
           if(err) {rej(err+".8d8d8d");return};
@@ -33,18 +43,33 @@ Model.refresh_selektion = function(){
           t3s = t3s.filter( t3 => {
             if(t3.data.thumbnail === 'nsfw')
               return false;
+            if(t3.data.preview === undefined)
+              return false;
             return true;
           });
+          //multiply score by aspect ratio fitness.
+          //square or cube the dot product of the normalized dimensions of game screen & image.
+          //for more divergent dims, the dimensional fitness will go to 0 faster.
+          var asp = normalize(dims);
+          for(let t3 of t3s){
+            t3.myscore = (t3.data.score+250);
+            t3.dims = [t3.data.preview.images[0].source.width, t3.data.preview.images[0].source.height];
+            t3.asp = normalize(t3.dims);
+            let dimensional_fitness = Math.pow(dot(asp, t3.asp), 4);
+            t3.myscore *= dimensional_fitness;
+            t3.myscore = Math.round(t3.myscore);
+          }
+
           let totscore = 0;
           for(let t3 of t3s){
-            totscore += t3.data.score;
+            totscore += t3.myscore;
           }
           r_c.del('t3_selektor', () => {
             let promises = [];
             let score = 0;
             for(let t3 of t3s){
               promises.push(new Promise( (rs,rj) => {
-                score += t3.data.score / totscore;
+                score += t3.myscore / totscore;
                 r_c.zadd('t3_selektor', score, t3.data.id, ()=> {rs()});
               }));
             }
@@ -234,16 +259,10 @@ Model.User = function(){
   };
 
   //return a random t3 that hasn't been fin'd by this user
-  //
-  this.next_t3 = () => {
-    return new Promise((reso, rej) => {
-      reso(1234);
-    });
-  };
-  this.rand_unfinished_t3id = function(){
+  this.rand_unfinished_t3id = function(dims){
     return new Promise( (reso,rej)=>{
-      Model.refresh_selektion().then(() => {
-        Model.weighted_t3_selektion(10).then( t3ids => {
+      Model.refresh_selektion(dims).then(() => {
+        Model.weighted_t3_selektion(16).then( t3ids => {
           this.get_fin().then ( (fin) => {
             for (let t3id of t3ids){
               if (!fin[t3id]){
@@ -257,9 +276,9 @@ Model.User = function(){
       });
     });
   }
-  this.rand_unfinished_t3 = function(){
+  this.rand_unfinished_t3 = function(dims){
     return new Promise( (reso,rej)=>{
-      this.rand_unfinished_t3id().then( t3id => {
+      this.rand_unfinished_t3id(dims).then( t3id => {
         Model.t3_from_db (t3id)
           .then( t3 => { //return a promise.
             reso(t3);
@@ -272,19 +291,6 @@ Model.User = function(){
   };
 };
 
-if(false)
-['log', 'warn'].forEach(function(method) {
-  var old = console[method];
-  console[method] = function() {
-    var stack = (new Error()).stack.split(/\n/);
-    // Chrome includes a single "Error" line, FF doesn't.
-    if (stack[0].indexOf('Error') === 0) {
-      stack = stack.slice(1);
-    }
-    var args = [].slice.apply(arguments).concat([stack[1].trim()]);
-    return old.apply(console, args);
-  };
-});
 
 Model.get_user = (userid) => {
   return new Promise( (resolve,reject) => {

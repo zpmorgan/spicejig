@@ -111,12 +111,14 @@ app.get('/t3_img/:t3id', (req,res) => {
       console.log('img for '+req.params.t3id+' not found');
       res.status(404).json(err + '.nyxnyxnyx')
     });
-  return;
 });
 
-app.get('/rand_puz_t3', userify, function(req,res){
+app.get('/rand_puz_t3/', userify, function(req,res){
+  dims = [1,1];
+  if (req.query.width && req.query.height)
+    dims = [req.query.width, req.query.height];
   var p = new Promise( (resolve,reject) => {
-    req.user.rand_unfinished_t3().then( (tng) => {
+    req.user.rand_unfinished_t3(dims).then( (tng) => {
       resolve(tng);
     }).catch( err=>{ reject(err + '.p3p3') });;
   });
