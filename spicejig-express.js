@@ -104,41 +104,14 @@ app.get('/t3_img/:t3id', (req,res) => {
   //Model.stream_t3pic(req.params.t3id)
   Model.fspath_t3pic(req.params.t3id)
     .then( fspath => {
+      res.setHeader("content-type", "image/jpeg");
       res.sendFile(fspath);
-      //res.setHeader("content-type", "image/jpeg");
       //stream.pipe(res);
-    })
-    .catch(err => {res.json(err + '.nyxnyxnyx')});
-  return;
-  var img_dir = "/tmp/";
-  var filename = req.params.t3id + '.jpg';
-  //var fspath = img_dir + filename;
-  Model.t3_img_path_when_ready(req.params.t3id)
-    .then( (filepath) => {
-      res.sendFile(filepath);
-    })
-    .catch( (err) => {
-      console.log(err);
-      res.json(err);
+    }).catch(err => {
+      console.log('img for '+req.params.t3id+' not found');
+      res.status(404).json(err + '.nyxnyxnyx')
     });
   return;
-
-  fs.access(fspath, fs.constants.R_OK, (err) => {
-    if(!err){
-      res.sendFile(fspath);
-      return;
-    }
-    Model.t3_from_db(req.params.t3id).then( (thing)=>{
-      //download from imgur, deviantart, etc, then tell express to send the file
-      request
-        .get(thing.data.url)
-        .pipe(fs.createWriteStream(fspath))
-        .on('finish', () => {
-          res.sendFile(fspath);
-        });
-    });
-  });
-  //res.sendFile('/home/zach/codestuff/scratch/spicejig/' + 'static/images/scream.jpg');
 });
 
 app.get('/rand_puz_t3', userify, function(req,res){

@@ -153,16 +153,23 @@ Model.fspath_t3pic = function(t3id){
       Model.t3_from_db(t3id).then( t3 => { // it's not here, gotta fetch it.
         console.log('getting '+t3.data.url);
         var r = request.get(t3.data.url);
-        var w = fs.createWriteStream(fspath);
-        w.on('open', () => {
-          //console.log('w opend > ' + fspath);
+        r.on('response', resp => {
+          if(resp.statusCode === 200){
+            t3pic_requests[t3.data.id] = r;
+            var w = fs.createWriteStream(fspath);
+            r.pipe(w);
+            w.on('open', () => {
+            });
+            w.on('finish', () => {
+              reso(fspath);
+              delete t3pic_requests[t3.data.id];
+            });
+          }
+          else{
+            console.log(resp.statusCode);
+            rej(resp.statusCode);
+          }
         });
-        w.on('finish', () => {
-          reso(fspath);
-          delete t3pic_requests[t3.data.id];
-        });
-        t3pic_requests[t3.data.id] = r;
-        r.pipe(w);
       }).catch ( err => {rej(err + '.orooroorooro')});
     });
   });
