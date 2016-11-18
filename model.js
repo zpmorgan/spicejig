@@ -45,6 +45,8 @@ Model.refresh_selektion = function(dims){
               return false;
             if(t3.data.preview === undefined)
               return false;
+            if(t3.data.score <= 15) // we want variety but we dont want crap
+              return false;
             return true;
           });
           //multiply score by aspect ratio fitness.
