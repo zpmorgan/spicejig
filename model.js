@@ -41,11 +41,15 @@ Model.refresh_selektion = function(dims){
             t3s[i] = JSON.parse(t3s[i]);
           //filter out nsfw
           t3s = t3s.filter( t3 => {
-            if(t3.data.thumbnail === 'nsfw')
+            if(t3.data.thumbnail === 'nsfw') // someone gets paid to play games at work.
               return false;
-            if(t3.data.preview === undefined)
+            if(t3.data.preview === undefined) // prolly 404, maybe self post.
               return false;
             if(t3.data.score <= 15) // we want variety but we dont want crap
+              return false;
+            if(/quotes/i.exec(t3.data.title)) // filter out quotes porn
+              return false;
+            if(t3.data.preview.images[0].source.width * t3.data.preview.images[0].source.height > 5000000) //filter out hubble deep field, please
               return false;
             return true;
           });
