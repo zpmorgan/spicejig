@@ -41,7 +41,6 @@ var userify = function(req,res,next){
   Model.get_user_from_session_id(req.session.id).then( (user) => {
     req.user = user;
     req.session.userid = user.id;
-    //console.log("user " + user.id + ' connected.  sessid: '+ req.session.id);
     next();
   });
 };
@@ -61,6 +60,7 @@ app.get('/',userify,spec_params, function(req, res) {
 });
 
 app.get('/random',userify,spec_params, function(req, res) {
+  console.log(req.user.id + ' doing /random');
   req.spec.img_from= "random";
   res.render('puzzle.must', {title:'Jigsaw', spec: JSON.stringify(req.spec), env: config.env});
 });
@@ -87,7 +87,7 @@ app.get('/t3data/:t3id', userify, (req,res) => {
 });
 
 app.get('/blank/:color?', userify, spec_params,(req,res) => {
-  console.log(req.session.id);
+  console.log(req.user.id + ' doing /blank');
   req.session.blargles = 'foo';
   req.spec.img_from = 'solidcolor';
   //req.spec.color = 'random';
@@ -130,7 +130,10 @@ app.get('/rand_puz_t3/', userify, function(req,res){
       resolve(tng);
     }).catch( err=>{ reject(err + '.p3p3') });;
   });
-  p.then( (tng) => {res.json(tng)});
+  p.then( (tng) => {
+    console.log(req.user.id + ' rolled '+ tng.data.id);
+    res.json(tng)
+  });
   p.catch( err => {res.json(err + '.dadadadada')});
 });
 

@@ -233,7 +233,6 @@ Model.User = function(){
   // get a list of all the finished t3's
   this.get_fin = () => {
     return new Promise( (resolve, rej) => {
-      console.log(this.id);
       r_c.hget('fin_by_user', this.id, (err,res) => {
         if (res === null)
           res = "{}";
@@ -311,7 +310,8 @@ Model.gen_new_user = function(){
     r_c.incr('next_userid', function(err,nextid){
       if(err)
         reject(err + '.asdf9');
-      var user = {id : nextid};
+      var user = new Model.User();
+      user.id = nextid;
       r_c.hset('user', nextid, JSON.stringify(user));
       resolve(user);
     });
