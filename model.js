@@ -41,9 +41,11 @@ Model.refresh_selektion = function(dims){
             t3s[i] = JSON.parse(t3s[i]);
           //filter out nsfw
           t3s = t3s.filter( t3 => {
+            if(t3.data.thumbnail === 'self') // filter out self posts
+              return false;
             if(t3.data.thumbnail === 'nsfw') // someone gets paid to play games at work.
               return false;
-            if(t3.data.preview === undefined) // prolly 404, maybe self post.
+            if(t3.data.preview === undefined) // prolly 404, or I think other undesirables.
               return false;
             if(t3.data.score <= 15) // we want variety but we dont want crap
               return false;
