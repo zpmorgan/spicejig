@@ -53,6 +53,8 @@ Model.refresh_selektion = function(dims){
               return false;
             if(t3.data.preview.images[0].source.width * t3.data.preview.images[0].source.height > 5000000) //filter out hubble deep field, please
               return false;
+            if(!/\.jpg/.exec(t3.data.url)) // filter out stuff that is not a jpeg
+              return false;
             return true;
           });
           //multiply score by aspect ratio fitness.
