@@ -213,8 +213,10 @@ Model.fspath_t3pic = function(t3id){
             });
           }
           else{
-            console.log(resp.statusCode);
-            rej(resp.statusCode);
+            console.log(t3.data.id +' request: '+ resp.statusCode +', url: '+ t3.data.url);
+            rej(t3.data.id +' request: '+ resp.statusCode +', url: '+ t3.data.url);
+            if(resp.statusCode==404)
+              Model.purge_t3(t3);
           }
         });
       }).catch ( err => {rej(err + '.orooroorooro')});
