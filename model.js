@@ -33,7 +33,7 @@ Model.refresh_selektion = function(dims){
     if (!dims)
       rej('no dims')
     Model.scrape_reddit_if_timely().then( () => {
-      r_c.srandmember('t3_set', 60, (err,t3ids) => {
+      r_c.srandmember('t3_set', 100, (err,t3ids) => {
         if(err) {rej(err+".vbvbvb");return};
         r_c.hmget('t3', t3ids, (err,t3s) => {
           if(err) {rej(err+".8d8d8d");return};
@@ -65,7 +65,7 @@ Model.refresh_selektion = function(dims){
             t3.myscore = (t3.data.score+250);
             t3.dims = [t3.data.preview.images[0].source.width, t3.data.preview.images[0].source.height];
             t3.asp = normalize(t3.dims);
-            let dimensional_fitness = Math.pow(dot(asp, t3.asp), 4);
+            let dimensional_fitness = Math.pow(dot(asp, t3.asp), 12);
             t3.myscore *= dimensional_fitness;
             t3.myscore = Math.round(t3.myscore);
           }
@@ -271,7 +271,7 @@ Model.User = function(){
   this.rand_unfinished_t3id = function(dims){
     return new Promise( (reso,rej)=>{
       Model.refresh_selektion(dims).then(() => {
-        Model.weighted_t3_selektion(16).then( t3ids => {
+        Model.weighted_t3_selektion(25).then( t3ids => {
           this.get_fin().then ( (fin) => {
             for (let t3id of t3ids){
               if (!fin[t3id]){
