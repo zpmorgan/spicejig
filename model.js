@@ -20,6 +20,30 @@ Model.rand_subreddit_url = function(){
   return url;
 };
 
+Model.purge_t3 = function(t3){
+  var t3id = t3.data.id;
+  r_c.hdel('t3',t3id);
+  r_c.srem('t3_set', t3id);
+  console.log('purged '+t3id);
+}
+function t3_desirable (t3){
+  if(t3.data.thumbnail === 'self') // filter out self posts
+    return false;
+  if(t3.data.thumbnail === 'nsfw') // someone gets paid to play games at work.
+    return false;
+  if(t3.data.preview === undefined) // prolly 404, or I think other undesirables.
+    return false;
+  if(t3.data.score <= 15) // we want variety but we dont want crap
+    return false;
+  if(/quotes/i.exec(t3.data.title)) // filter out quotes porn
+    return false;
+  if(t3.data.preview.images[0].source.width * t3.data.preview.images[0].source.height > 5000000) //filter out hubble deep field, please
+    return false;
+  if(!/\.jpg/.exec(t3.data.url)) // filter out stuff that is not a jpeg
+    return false;
+  return true;
+};
+
 function normalize(p){
   var magnitude = Math.sqrt(p[0]*p[0] + p[1]*p[1]);
   return [p[0]/magnitude, p[1]/magnitude];
@@ -39,24 +63,13 @@ Model.refresh_selektion = function(dims){
           if(err) {rej(err+".8d8d8d");return};
           for (let i=0; i < t3s.length; i++)
             t3s[i] = JSON.parse(t3s[i]);
-          //filter out nsfw
-          t3s = t3s.filter( t3 => {
-            if(t3.data.thumbnail === 'self') // filter out self posts
-              return false;
-            if(t3.data.thumbnail === 'nsfw') // someone gets paid to play games at work.
-              return false;
-            if(t3.data.preview === undefined) // prolly 404, or I think other undesirables.
-              return false;
-            if(t3.data.score <= 15) // we want variety but we dont want crap
-              return false;
-            if(/quotes/i.exec(t3.data.title)) // filter out quotes porn
-              return false;
-            if(t3.data.preview.images[0].source.width * t3.data.preview.images[0].source.height > 5000000) //filter out hubble deep field, please
-              return false;
-            if(!/\.jpg/.exec(t3.data.url)) // filter out stuff that is not a jpeg
-              return false;
-            return true;
-          });
+
+          //filter out nsfw and other undesirables
+          var undesirables = t3s.filter(t3=> !t3_desirable(t3));
+          for (let t3 of undesirables){
+            Model.purge_t3(t3);
+          };
+          t3s = t3s.filter( t3_desirable);
           //multiply score by aspect ratio fitness.
           //square or cube the dot product of the normalized dimensions of game screen & image.
           //for more divergent dims, the dimensional fitness will go to 0 faster.
@@ -142,8 +155,7 @@ Model.scrape_reddit = function(){
       }
       var hundred_promises = [];
       for (let t3 of t3s){
-        var jpg_re = /\.jpg/;
-        if (! t3.data.url.match(jpg_re)) //only direct links to images please
+        if(!t3_desirable(t3))
           continue;
         r_c.hset('t3', t3.data.id, JSON.stringify(t3));
         //remove from score index and re-insert.
