@@ -156,7 +156,8 @@ Model.scrape_reddit = function(){
       }
       var hundred_promises = [];
       for (let t3 of t3s){
-        if (t3.data.url.match(/\.gif/))
+        t3.orig_url = t3.data.url; // it may change from a page url.
+        if (t3.data.url.match(/\.gif|gallery/))
           continue;
 
         //translate imgur to i.imgur
@@ -164,7 +165,6 @@ Model.scrape_reddit = function(){
         var match = t3.data.url.match(/http:\/\/imgur.com\/([a-zA-Z0-9]{5,})/);
         if (match){
           t3.data.url = "http://i.imgur.com/" + match[1] + ".jpg";
-          console.log(t3.data.url)
         }
 
         // run a bunch of filters: nsfw, jpg, score, size, etc.
