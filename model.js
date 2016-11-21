@@ -75,12 +75,13 @@ Model.refresh_selektion = function(dims){
           //for more divergent dims, the dimensional fitness will go to 0 faster.
           var asp = normalize(dims);
           for(let t3 of t3s){
-            t3.myscore = (t3.data.score+250);
+            t3.myscore = Math.pow (Math.log2(t3.data.score), 2.3);
             t3.dims = [t3.data.preview.images[0].source.width, t3.data.preview.images[0].source.height];
             t3.asp = normalize(t3.dims);
-            let dimensional_fitness = Math.pow(dot(asp, t3.asp), 12);
+            let dimensional_fitness = Math.pow(dot(asp, t3.asp), 11); // TODO: some sort of sigmoid?
+            if (dimensional_fitness < .5)
+              dimensional_fitness = .001; //bleh, no tweaks will be enough;
             t3.myscore *= dimensional_fitness;
-            t3.myscore = Math.round(t3.myscore);
           }
 
           let totscore = 0;
