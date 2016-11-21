@@ -129,7 +129,7 @@ Model.scrape_reddit_if_timely = function(){
     r_c.get('last_scrape_t', (err,t) => {
       if(t===null) t=0;
       else t = parseInt(t);
-      if (t + 100 > d_seconds){
+      if (t + 1000 > d_seconds){
         reso( {scraped: "no"} );
         return;
       }
@@ -156,6 +156,18 @@ Model.scrape_reddit = function(){
       }
       var hundred_promises = [];
       for (let t3 of t3s){
+        if (t3.data.url.match(/\.gif/))
+          continue;
+
+        //translate imgur to i.imgur
+        //TODO: what if http://imgur.com/AsDfGhJk or whatever is an animated gif? I dont even know
+        var match = t3.data.url.match(/http:\/\/imgur.com\/([a-zA-Z0-9]{5,})/);
+        if (match){
+          t3.data.url = "http://i.imgur.com/" + match[1] + ".jpg";
+          console.log(t3.data.url)
+        }
+
+        // run a bunch of filters: nsfw, jpg, score, size, etc.
         if(!t3_desirable(t3))
           continue;
         r_c.hset('t3', t3.data.id, JSON.stringify(t3));
