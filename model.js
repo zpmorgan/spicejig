@@ -9,7 +9,7 @@ var Model = {};
 module.exports = Model;
 
 Model.rand_subreddit_url = function(){
-  var subreddits = ['imaginarybestof', 'NoSillySuffix', 'ImaginaryMindscapes', 'wallpapers'];
+  var subreddits = ['imaginarybestof', 'NoSillySuffix', 'ImaginaryMindscapes', 'wallpapers', 'MostBeautiful'];
   var s = subreddits[Math.floor(Math.random()*subreddits.length)];
   //"https://www.reddit.com/r/ImaginaryMindscapes/top.json?limit=25&sort=top&t=all",
   var url;
