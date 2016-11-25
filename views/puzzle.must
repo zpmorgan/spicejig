@@ -4,21 +4,22 @@
     <script>
       var require = {
         //baseUrl: "/",
-        deps: ['domReady', 'phaser', 'game', 'puzzle'],
+        deps: ['domReady', 'phaser', 'game', 'puzzle', 'util'],
         paths: {
-          js: 'foo',
           domReady: '/js/domReady',
           phaser: '/js/phaser',
           game: '/skrpt/game',
           puzzle: '/skrpt/puzzle',
+          util: '/skrpt/util',
         },
         callback: function(domready,ph,ga,pu){
-          STARTWHENREADY(domready);
+          require(['domReady', 'phaser', 'game', 'puzzle', 'util'], function(domready){
+            STARTWHENREADY(domready);
+          });
         },
       };
     </script>
 
-    <!--<script data-main="/skrpt/game.js" src="/js/require.js"></script>-->
 		<script src="/js/require.js"></script>
     <title>{{title}}</title>
     <style>
