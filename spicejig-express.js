@@ -12,11 +12,16 @@ try {
 
 var express = require('express');
 var app = express();
-app.use(express.static(__dirname + '/static'));
-if (config.env === 'dev')
+
+//static directories
+if (config.env === 'dev'){
   app.use('/skrpt', express.static(__dirname + '/lib'));
-else
+  //app.use('/js', express.static(__dirname + '/static/js'));
+} else{ //prod
   app.use('/skrpt', express.static(__dirname + '/dist'));
+  app.use('/js', express.static(__dirname + '/static/js-min'));
+}
+app.use(express.static(__dirname + '/static'));
 
 var session = require('express-session');
 var FileStore = require('session-file-store')(session);
