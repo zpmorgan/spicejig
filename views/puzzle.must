@@ -8,12 +8,13 @@
         paths: {
           domReady: '/js/domReady',
           phaser: '/js/phaser',
+          savecpu: '/js/SaveCPU',
           game: '/skrpt/game',
           puzzle: '/skrpt/puzzle',
           util: '/skrpt/util',
         },
         callback: function(domready,ph,ga,pu){
-          require(['domReady', 'phaser', 'game', 'puzzle', 'util'], function(domready){
+          require(['domReady', 'phaser', 'game', 'puzzle', 'util', 'savecpu'], function(domready){
             STARTWHENREADY(domready);
           });
         },
