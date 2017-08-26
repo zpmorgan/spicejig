@@ -1,9 +1,11 @@
 var config;
+var path = require('path');
+
 try {
   config = require('./config.json')
   console.log('loading config.json');
 } catch (ex) {
-  console.log('config not found.');
+  console.log('config not found. enabling dev mode.');
   config = {
     secret: 'lkasjdhfgkjlhafdgiludfha98fha98hf9agh',
     env: 'dev',
@@ -64,7 +66,7 @@ var spec_params = function(req,res,next){
 
 // make it rain
 app.get('/',userify,spec_params, function(req, res) {
-  req.spec.img_from = "rain";
+  req.spec.mode= "rain";
   res.render('puzzle.must', {title:'The Dark Souls of casual jigsaw games', spec: JSON.stringify(req.spec), env: config.env});
 });
 
@@ -97,7 +99,6 @@ app.get('/t3data/:t3id', userify, (req,res) => {
 
 app.get('/blank/:color?', userify, spec_params,(req,res) => {
   console.log(req.user.id + ' doing /blank');
-  req.session.blargles = 'foo';
   req.spec.img_from = 'solidcolor';
   //req.spec.color = 'random';
   if (req.params.color)
@@ -109,6 +110,12 @@ app.get('/blank/:color?', userify, spec_params,(req,res) => {
 app.get('/scream', userify, spec_params, (req,res) => {
   req.spec.img_from = "scream";
   res.render('puzzle.must', {title:'😱 😱 😱 😱 😱', spec: JSON.stringify(req.spec), env: config.env});
+});
+
+app.get('/thumbzone', userify, spec_params, (req,res) => {
+  console.log(req.user.id + ' doing /thumbzone');
+  req.spec.mode= "zone";
+  res.render('puzzle.must', {title:'thumb', spec: JSON.stringify(req.spec), env: config.env});
 });
 
 app.get('/scrapereddit', function(req,res){
@@ -129,9 +136,34 @@ app.get('/t3_img/:t3id', (req,res) => {
       res.status(404).json(err + '.nyxnyxnyx')
     });
 });
+app.get('/thumb/:t3id', userify, (req,res) => {
+  //res.setHeader("content-type", "image/jpeg");
+  //res.sendFile(path.join(__dirname, 'static', 'images', 'scream.jpg'));
+  let dims = [1,1];
+  if (req.query.width && req.query.height)
+    dims = [req.query.width, req.query.height];
+  req.user.rand_unfinished_t3(dims).then( (tng) => {
+    Model.fspath_t3thumb(tng.data.id).then( (fspath) => {
+      res.setHeader("content-type", "image/jpeg");
+      res.sendFile(fspath);
+    }).catch( err => {
+      console.log('thumbnail for '+req.params.t3id+' not found');
+      res.status(404).json(err + '../thumb/fail')
+    });
+  });
+  return;
+  Model.fspath_t3thumb(req.params.t3id)
+    .then( fspath => {
+      res.setHeader("content-type", "image/jpeg");
+      res.sendFile(fspath);
+    }).catch(err => {
+      console.log('thumbnail for '+req.params.t3id+' not found');
+      res.status(404).json(err + '.ixtocixtoc')
+    });
+});
 
 app.get('/rand_puz_t3/', userify, function(req,res){
-  dims = [1,1];
+  let dims = [1,1];
   if (req.query.width && req.query.height)
     dims = [req.query.width, req.query.height];
   var p = new Promise( (resolve,reject) => {
@@ -200,5 +232,6 @@ setInterval( ()=>{ // log time every 10 mins.
   console.log(timeStamp());;
 }, 10*60*1000);
 
+console.log('http://localhost:8888');
 app.listen(8888);
 

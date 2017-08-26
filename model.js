@@ -4,6 +4,7 @@ var rp = require('request-promise');
 var redis = require("redis");
 var r_c = redis.createClient();
 var fs = require('fs');
+var path = require('path');
 
 var Model = {};
 module.exports = Model;
@@ -191,53 +192,78 @@ Model.scrape_reddit = function(){
   });
 };
 
-var t3pic_requests = {};
-// resolve file path when image starts downloading
-// resolve file path if it's already downloading
-// resolve file path if it's already downloaded
-// reject if 404.
-Model.fspath_t3pic = function(t3id){
-  var img_dir = "/tmp/";
-  var filename = t3id + '.jpg';
-  var fspath = img_dir + filename;
-  return new Promise( (reso,rej) => {
-    if (t3pic_requests[t3id]){
-      reso(fspath);//partially downloaded? maybe that's ok.
+Model.img_dir = "/tmp/t3_img";
+Model.thumb_dir = "/tmp/t3_thumb";
+
+if (!fs.existsSync(Model.thumb_dir)) 
+  fs.mkdirSync(Model.img_dir, 0o744);
+if (!fs.existsSync(Model.thumb_dir)) 
+  fs.mkdirSync(Model.thumb_dir, 0o744);
+
+var pic_requests = {};
+
+//just resolves positive without downloading if it's at fspath already
+Model.download_pic = function(pic_url, fspath){
+  return new Promise((reso,rej) => {
+    if (pic_requests[fspath]){
+      reso();
       return;
     }
+    //see if we have it now in filesystem
     var stat = fs.stat(fspath, (err,stats) => {
       if (!err){
-        reso(fspath);
+        reso();
         return;
       }
-      // file not found, so fetch it.
-      Model.t3_from_db(t3id).then( t3 => { // it's not here, gotta fetch it.
-        console.log('getting '+t3.data.url);
-        var r = request.get(t3.data.url);
-        r.on('response', resp => {
-          if(resp.statusCode === 200){
-            t3pic_requests[t3.data.id] = r;
-            var w = fs.createWriteStream(fspath);
-            r.pipe(w);
-            w.on('open', () => {
-            });
-            w.on('finish', () => {
-              reso(fspath);
-              delete t3pic_requests[t3.data.id];
-            });
-          }
-          else{
-            console.log(t3.data.id +' request: '+ resp.statusCode +', url: '+ t3.data.url);
-            rej(t3.data.id +' request: '+ resp.statusCode +', url: '+ t3.data.url);
-            if(resp.statusCode==404)
-              Model.purge_t3(t3);
-          }
-        });
-      }).catch ( err => {rej(err + '.orooroorooro')});
+      console.log('getting pic at ' + pic_url);
+      var r = request.get(pic_url);
+      r.on('response', resp => {
+        if(resp.statusCode === 200){
+          var w = fs.createWriteStream(fspath);
+          r.pipe(w);
+          w.on('open', ()=>{});
+          w.on('finish', ()=> {
+            reso();
+            delete pic_requests[fspath];
+          });
+        }
+        else {
+          console.log(pic_url +' request failed: '+ resp.statusCode +', fspath: '+ fspath);
+          rej(pic_url +' request failed: '+ resp.statusCode +', fspath: '+ fspath);
+        }
+      })
     });
   });
-
 };
+
+Model.fspath_t3pic = function(t3id){
+  var filename = t3id + '.jpg';
+  var fspath = Model.img_dir + '/' + filename;
+  return new Promise( (reso,rej) => {
+    Model.t3_from_db(t3id).then( t3 => {
+      var dl_promise = Model.download_pic(t3.data.url, fspath);
+      dl_promise.then( () => {
+        reso(fspath);
+      });
+      dl_promise.catch( (err) => { rej(err + '.pic_dl_failed.'); });
+    }).catch ( err => {rej(err + '.t3_fspath_failed')});
+  });
+};
+
+Model.fspath_t3thumb = function(t3id){
+  var filename = t3id + '.jpg';
+  var fspath = Model.thumb_dir + '/' + filename;
+  return new Promise( (reso,rej) => {
+    Model.t3_from_db(t3id).then( t3 => {
+      var dl_promise = Model.download_pic(t3.data.thumbnail, fspath);
+      dl_promise.then( () => {
+        reso(fspath);
+      });
+      dl_promise.catch( (err) => { rej(err + '.thumb_dl_failed.'); });
+    }).catch ( err => {rej(err + '.fspath_t3thumb_failed')});
+  });
+};
+
 
 Model.t3_from_db = (t3id) => { //return a promise.
   var p = new Promise( (resolve,rej) => {
