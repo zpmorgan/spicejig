@@ -72,18 +72,33 @@ Model.refresh_selektion = function(dims){
             Model.purge_t3(t3);
           };
           t3s = t3s.filter( t3_desirable);
-          //multiply score by aspect ratio fitness.
-          //square or cube the dot product of the normalized dimensions of game screen & image.
-          //for more divergent dims, the dimensional fitness will go to 0 faster.
           var asp = normalize(dims);
+          //figure out how much we like each image, based on a few factors.
           for(let t3 of t3s){
-            t3.myscore = Math.pow (Math.log2(t3.data.score), 2.3);
+            let karma_fitness = Math.pow (Math.log2(t3.data.score), 2.3);
+
+            //multiply score by aspect ratio fitness.
+            //square or cube the dot product of the normalized dimensions of game screen & image.
+            //for more divergent dims, the dimensional fitness will go to 0 faster.
             t3.dims = [t3.data.preview.images[0].source.width, t3.data.preview.images[0].source.height];
             t3.asp = normalize(t3.dims);
             let dimensional_fitness = Math.pow(dot(asp, t3.asp), 11); // TODO: some sort of sigmoid?
             if (dimensional_fitness < .5)
               dimensional_fitness = .001; //bleh, no tweaks will be enough;
-            t3.myscore *= dimensional_fitness;
+
+            //bias toward newer images.
+            //floor newness fitness at 0.1
+            let degradation_unit = 60*60*24*7 * 2; //2 week
+            let timestamp = t3.data.created_utc;
+            let now = new Date();
+            let age_in_seconds = Math.abs( now/1000 - timestamp);
+            let newness_fitness = 1 / (.5 +(age_in_seconds / (degradation_unit)));
+            newness_fitness += .1;
+            //1.45 is 3 days ago, 0.84=11 days, 0.29=2 months, 0.11=23 months, etc.
+            //console.log(newness_fitness + ' ' + t3.data.url);
+
+            t3.myscore = karma_fitness * dimensional_fitness * newness_fitness;
+            //console.log(t3.myscore + ' ' + t3.data.url);
           }
 
           let totscore = 0;
