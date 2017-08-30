@@ -138,7 +138,7 @@ app.get('/t3_img/:t3id', (req,res) => {
 app.get('/thumb/:t3id', userify, (req,res) => {
   //res.setHeader("content-type", "image/jpeg");
   //res.sendFile(path.join(__dirname, 'static', 'images', 'scream.jpg'));
-  let dims = [1,1];
+  let dims = [1.61,1];
   if (req.query.width && req.query.height)
     dims = [req.query.width, req.query.height];
   req.user.rand_unfinished_t3(dims).then( (tng) => {
@@ -149,20 +149,14 @@ app.get('/thumb/:t3id', userify, (req,res) => {
       console.log('thumbnail for '+req.params.t3id+' not found');
       res.status(404).json(err + '../thumb/fail')
     });
+  }).catch( err => {
+    console.log(err + '.nothumb');
+    res.json( {err: 'thumb error: |'+ err + '|, so no thumb...'})
   });
-  return;
-  Model.fspath_t3thumb(req.params.t3id)
-    .then( fspath => {
-      res.setHeader("content-type", "image/jpeg");
-      res.sendFile(fspath);
-    }).catch(err => {
-      console.log('thumbnail for '+req.params.t3id+' not found');
-      res.status(404).json(err + '.ixtocixtoc')
-    });
 });
 
 app.get('/rand_puz_t3/', userify, function(req,res){
-  let dims = [1,1];
+  let dims = [1.61,1];
   if (req.query.width && req.query.height)
     dims = [req.query.width, req.query.height];
   var p = new Promise( (resolve,reject) => {

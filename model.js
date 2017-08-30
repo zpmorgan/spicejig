@@ -54,7 +54,10 @@ function dot(p1,p2){
   return p1[0]*p2[0] + p1[1]*p2[1];
 }
 
+let selektion_increment = 0;
 Model.refresh_selektion = function(dims){
+  let selektion_key = 't3_selektor' + selektion_increment;
+  selektion_increment++;
   return new Promise( (reso,rej) => {
     if (!dims)
       rej('no dims')
@@ -105,37 +108,39 @@ Model.refresh_selektion = function(dims){
           for(let t3 of t3s){
             totscore += t3.myscore;
           }
-          r_c.del('t3_selektor', () => {
-            let promises = [];
-            let score = 0;
-            for(let t3 of t3s){
-              promises.push(new Promise( (rs,rj) => {
-                score += t3.myscore / totscore;
-                r_c.zadd('t3_selektor', score, t3.data.id, ()=> {rs()});
-              }));
-            }
-            Promise.all(promises).then( () => {
-              reso(true);
-            }).catch( err => {console.log("blah!",err);rej(err + ', qzqzqz')});
-          });
+          let promises = [];
+          let score = 0;
+          for(let t3 of t3s){
+            promises.push(new Promise( (rs,rj) => {
+              score += t3.myscore / totscore;
+              r_c.zadd(selektion_key, score, t3.data.id, ()=> {rs()});
+            }));
+          }
+          Promise.all(promises).then( () => {
+            //set our sorted set to expire after use.
+            r_c.expire(selektion_key, 10);
+            reso(selektion_key);
+          }).catch( err => {console.log("blah!",err);rej(err + '.selektion-failure')});
         });
       });
-    }).catch (err => {rej(err + 'bhobho')});
+    }).catch (err => {rej(err + '.scrape-fail')});
   });
 };
 // this returns duplicates.
-Model.weighted_t3_selektion = function(n){
+Model.weighted_t3_selektion = function(n, dims){
   return new Promise( (reso,rej)=>{
-    let promises = [];
-    for (let i=0;i<n;i++){
-      promises.push( new Promise ((rs,rj) => {
-        //this returns an array, even when it's of one.
-        r_c.zrangebyscore('t3_selektor', Math.random()*.9, 999, 'LIMIT', 0, 1, (err,t3) => {rs(t3[0])} );
-      }));
-    }
-    Promise.all(promises).then( selektion => {
-      reso(selektion);
-    }).catch( err => {rej(err + '.pgpgpg')});;
+    Model.refresh_selektion(dims).then( selektion_key => {
+      let promises = [];
+      for (let i=0;i<n;i++){
+        promises.push( new Promise ((rs,rj) => {
+          //this returns an array, even when it's of one.
+          r_c.zrangebyscore(selektion_key, Math.random()*.9, 999, 'LIMIT', 0, 1, (err,t3) => {rs(t3[0])} );
+        }));
+      }
+      Promise.all(promises).then( selektion => {
+        reso(selektion);
+      }).catch( err => {rej(err + '.pgpgpg')});;
+    });
   });
 };
 
@@ -271,6 +276,7 @@ Model.fspath_t3pic = function(t3id){
 Model.fspath_t3thumb = function(t3id){
   var filename = t3id + '.jpg';
   var fspath = Model.thumb_dir + '/' + filename;
+  console.log(t3id + ' asdf');
   return new Promise( (reso,rej) => {
     Model.t3_from_db(t3id).then( t3 => {
       var dl_promise = Model.download_pic(t3.data.thumbnail, fspath);
@@ -342,24 +348,24 @@ Model.User = function(){
   //return a random t3 that hasn't been fin'd by this user
   this.rand_unfinished_t3id = function(dims){
     return new Promise( (reso,rej)=>{
-      Model.refresh_selektion(dims).then(() => {
-        Model.weighted_t3_selektion(25).then( t3ids => {
-          this.get_fin().then ( (fin) => {
-            for (let t3id of t3ids){
-              if (!fin[t3id]){
-                reso(t3id);
-                return;
-              }
+      Model.weighted_t3_selektion(25, dims).then( t3ids => {
+        this.get_fin().then ( (fin) => {
+          for (let t3id of t3ids){
+            if (!fin[t3id]){
+              reso(t3id);
+              return;
             }
-            rej('tried 10, nothing new found');
-          });
-        });;
+          }
+          rej('tried 10, nothing new found');
+        });
       });
     });
   }
   this.rand_unfinished_t3 = function(dims){
     return new Promise( (reso,rej)=>{
       this.rand_unfinished_t3id(dims).then( t3id => {
+        if (t3id)
+          console.log('no t3 found for dims:' + dims);
         Model.t3_from_db (t3id)
           .then( t3 => { //return a promise.
             reso(t3);
