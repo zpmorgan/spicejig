@@ -156,22 +156,29 @@ Model.scrape_reddit_if_timely = function(){
         reso( {scraped: "yes", scrape : result} );
         return;
       });
-      scrape_promise.catch( err => {rej(err + '.qpqpqp')});;
+      scrape_promise.catch( err => {rej(err + '.timely-scrape-failed')});;
     });
   });
 };
 
 Model.scrape_reddit = function(){
+  console.log('SCRAPE engaged!');
   let url = Model.rand_subreddit_url();
   return new Promise ( (reso,rej) => {
-    rp(url).then( json => {
+    let rp_opts = {
+      "uri" : url,
+      "headers": {
+        "User-Agent": "foog.us jigsaw server",
+      }
+    };
+    rp(rp_opts).then( json => {
       var subreddit_page = JSON.parse(json);
 
       var t3s = subreddit_page.data.children;
       if (t3s.length < 3){
         rej('whaaaat? url ' + url + ' returned:'+ "\n\n\n\n\n"+ json); return;
       }
-      var hundred_promises = [];
+      console.log('SCRAPE gives '+t3s.length+ ' t3s from '+ url);
       for (let t3 of t3s){
         t3.orig_url = t3.data.url; // it may change from a page url.
         if (t3.data.url.match(/\.gif|gallery/))
@@ -190,6 +197,7 @@ Model.scrape_reddit = function(){
         r_c.hset('t3', t3.data.id, JSON.stringify(t3));
         //remove from score index and re-insert.
         // on redis 3 it can be done in one operation.
+        let hundred_promises = [];
         hundred_promises.push(new Promise( (resx,rejx) => {
           r_c.sadd('t3_set', t3.data.id); // for random selection
           r_c.zrem('t3_reddit_score', t3.data.id, () => {
@@ -199,10 +207,9 @@ Model.scrape_reddit = function(){
             });
           });
         }));
+        Promise.all(hundred_promises).then( values => {reso( {scraped : "yes"} ) } )
+          .catch(err => {rej(err + '.one of a hundred promises failed?')});
       }
-      //console.log(hundred_promises.length, 345345);
-      Promise.all(hundred_promises).then( values => {reso( {scraped : "yes"} ) } )
-        .catch(err => {rej(err + 'l4l4l4')});
     }).catch( err => {rej(err + '.||||')});;
   });
 };
