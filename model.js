@@ -88,7 +88,7 @@ Model.refresh_selektion = function(dims){
 
             //bias toward newer images.
             //floor newness fitness at 0.1
-            let degradation_unit = 60*60*24*7 * 2; //2 week
+            let degradation_unit = 60*60*24*7 * 1; //1 week
             let timestamp = t3.data.created_utc;
             let now = new Date();
             let age_in_seconds = Math.abs( now/1000 - timestamp);
@@ -199,12 +199,8 @@ Model.scrape_reddit = function(){
         // on redis 3 it can be done in one operation.
         let hundred_promises = [];
         hundred_promises.push(new Promise( (resx,rejx) => {
-          r_c.sadd('t3_set', t3.data.id); // for random selection
-          r_c.zrem('t3_reddit_score', t3.data.id, () => {
-            r_c.zadd('t3_reddit_score', t3.data.score, t3.data.id, ()=>{
-              resx();
-              //console.log(t3.data.score, t3.data.id);
-            });
+          r_c.sadd('t3_set', t3.data.id, () => { // for random selection
+            resx();
           });
         }));
         Promise.all(hundred_promises).then( values => {reso( {scraped : "yes"} ) } )
