@@ -276,7 +276,6 @@ Model.fspath_t3pic = function(t3id){
 Model.fspath_t3thumb = function(t3id){
   var filename = t3id + '.jpg';
   var fspath = Model.thumb_dir + '/' + filename;
-  console.log(t3id + ' asdf');
   return new Promise( (reso,rej) => {
     Model.t3_from_db(t3id).then( t3 => {
       var dl_promise = Model.download_pic(t3.data.thumbnail, fspath);
@@ -364,8 +363,11 @@ Model.User = function(){
   this.rand_unfinished_t3 = function(dims){
     return new Promise( (reso,rej)=>{
       this.rand_unfinished_t3id(dims).then( t3id => {
-        if (t3id)
+        if (!t3id){
           console.log('no t3 found for dims:' + dims);
+          rej('no t3 found for dims:' + dims);
+          return;
+        }
         Model.t3_from_db (t3id)
           .then( t3 => { //return a promise.
             reso(t3);
