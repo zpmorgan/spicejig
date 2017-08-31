@@ -1,0 +1,9 @@
+It's a jigsaw puzzle.
+On the backend, it scrapes reddit looking for interesting art & photos.
+So every time a user tries a puzzle, they get something unique
+ and hopefully pretty cool.
+
+
+forever /usr/bin/forever /home/foog/spicejig/spicejig-express.js
+iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 8888
+
