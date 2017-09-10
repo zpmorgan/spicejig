@@ -242,6 +242,10 @@ Model.download_pic = function(pic_url, fspath){
       var r = request.get(pic_url);
       r.on('response', resp => {
         if(resp.statusCode === 200){
+          if (resp.request.uri.href != pic_url){ //redirected, could be a 'not found' image
+            r_c.rpush('redirect_log', JSON.stringify({from:pic_url, to:resp.request.uri.href}));
+            console.log('redirection logged!');
+          }
           var w = fs.createWriteStream(fspath);
           r.pipe(w);
           w.on('open', ()=>{});
