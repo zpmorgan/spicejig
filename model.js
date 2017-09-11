@@ -22,10 +22,14 @@ Model.rand_subreddit_url = function(){
   return url;
 };
 
+//input the t3 hash or just the t3id
 Model.purge_t3 = function(t3){
-  var t3id = t3.data.id;
+  let t3id = t3;
+  if (typeof t3 == "object")
+    t3id = t3.data.id;
   r_c.hdel('t3',t3id);
   r_c.srem('t3_set', t3id);
+  r_c.hset('purged_t3', t3id, 1);
   console.log('purged '+t3id);
 }
 function t3_desirable (t3){
@@ -199,13 +203,17 @@ Model.scrape_reddit = function(){
         // run a bunch of filters: nsfw, jpg, score, size, etc.
         if(!t3_desirable(t3))
           continue;
-        r_c.hset('t3', t3.data.id, JSON.stringify(t3));
-        //remove from score index and re-insert.
-        // on redis 3 it can be done in one operation.
+        //re-insert. some data changes, such as reddit karma.
         let hundred_promises = [];
         hundred_promises.push(new Promise( (resx,rejx) => {
-          r_c.sadd('t3_set', t3.data.id, () => { // for random selection
-            resx();
+          r_c.hget('purged_t3', t3.data.id, (is_purged) => {
+            if (!is_purged){
+              r_c.hset('t3', t3.data.id, JSON.stringify(t3));
+              r_c.sadd('t3_set', t3.data.id, () => { // for random selection
+                resx();
+              });
+            }
+            else { resx(); } // t3 already evaluated.
           });
         }));
         Promise.all(hundred_promises).then( values => {reso( {scraped : "yes"} ) } )
@@ -245,6 +253,10 @@ Model.download_pic = function(pic_url, fspath){
           if (resp.request.uri.href != pic_url){ //redirected, could be a 'not found' image
             r_c.rpush('redirect_log', JSON.stringify({from:pic_url, to:resp.request.uri.href}));
             console.log('redirection logged!');
+            if (resp.request.uri.href == "http://i.imgur.com/removed.png"){
+              rej('imgur-removed-png.');
+              return;
+            }
           }
           var w = fs.createWriteStream(fspath);
           r.pipe(w);

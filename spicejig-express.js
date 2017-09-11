@@ -132,6 +132,8 @@ app.get('/t3_img/:t3id', (req,res) => {
       //stream.pipe(res);
     }).catch(err => {
       console.log('img for '+req.params.t3id+' not found');
+      if (/imgur-removed/.exec(err))
+        Model.purge_t3(req.params.t3id);
       res.status(404).json(err + '.nyxnyxnyx')
     });
 });
