@@ -253,8 +253,9 @@ Model.download_pic = function(pic_url, fspath){
           if (resp.request.uri.href != pic_url){ //redirected, could be a 'not found' image
             r_c.rpush('redirect_log', JSON.stringify({from:pic_url, to:resp.request.uri.href}));
             console.log('redirection logged!');
-            if (resp.request.uri.href == "http://i.imgur.com/removed.png"){
-              rej('imgur-removed-png.');
+            if (resp.request.uri.href == "http://i.imgur.com/removed.png" || 
+                resp.request.uri.href == 'https://s.yimg.com/pw/images/en-us/photo_unavailable.png'){
+              rej('host-removed-png.');
               return;
             }
           }
