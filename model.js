@@ -17,6 +17,7 @@ Model.subreddit_pool = {
   'MostBeautiful': {bias:5},
   'VillagePorn': {bias:10},
   'EarthPorn': {bias:8},
+  'nocontextpics': {bias:14},
 };
 Model.subreddits = Object.keys(Model.subreddit_pool);
 
