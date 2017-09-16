@@ -9,10 +9,19 @@ var path = require('path');
 var Model = {};
 module.exports = Model;
 
+Model.subreddit_pool = {
+  'ImaginaryBestOf': {bias:35},
+  'NoSillySuffix': {bias:20},
+  'ImaginaryMindscapes': {bias:20},
+  'wallpapers': {bias:5},
+  'MostBeautiful': {bias:5},
+  'VillagePorn': {bias:10},
+  'EarthPorn': {bias:8},
+};
+Model.subreddits = Object.keys(Model.subreddit_pool);
+
 Model.rand_subreddit_url = function(){
-  var subreddits = ['imaginarybestof', 'NoSillySuffix', 'ImaginaryMindscapes', 'wallpapers', 'MostBeautiful',
-    'VillagePorn', 'EarthPorn'];
-  var s = subreddits[Math.floor(Math.random()*subreddits.length)];
+  var s = Model.subreddits[Math.floor(Math.random()*subreddits.length)];
   //"https://www.reddit.com/r/ImaginaryMindscapes/top.json?limit=25&sort=top&t=all",
   var url;
   if (Math.random() > .5)
@@ -102,10 +111,10 @@ Model.refresh_selektion = function(dims){
             let newness_fitness = 1 / (.5 +(age_in_seconds / (degradation_unit)));
             newness_fitness += .1;
             //1.45 is 3 days ago, 0.84=11 days, 0.29=2 months, 0.11=23 months, etc.
-            //console.log(newness_fitness + ' ' + t3.data.url);
 
-            t3.myscore = karma_fitness * dimensional_fitness * newness_fitness;
-            //console.log(t3.myscore + ' ' + t3.data.url);
+            let subreddit_bias = Model.subreddit_pool[t3.data.subreddit].bias;
+
+            t3.myscore = karma_fitness * dimensional_fitness * newness_fitness * subreddit_bias;
           }
 
           let totscore = 0;
