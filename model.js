@@ -22,7 +22,7 @@ Model.subreddit_pool = {
 Model.subreddits = Object.keys(Model.subreddit_pool);
 
 Model.rand_subreddit_url = function(){
-  var s = Model.subreddits[Math.floor(Math.random()*subreddits.length)];
+  var s = Model.subreddits[Math.floor(Math.random()*Model.subreddits.length)];
   //"https://www.reddit.com/r/ImaginaryMindscapes/top.json?limit=25&sort=top&t=all",
   var url;
   if (Math.random() > .5)
