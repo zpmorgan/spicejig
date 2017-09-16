@@ -164,8 +164,7 @@ Model.scrape_reddit_if_timely = function(){
       scrape_promise.then( result => {
         reso( {scraped: "yes", scrape : result} );
         return;
-      });
-      scrape_promise.catch( err => {rej(err + '.timely-scrape-failed')});;
+      }).catch( err => {rej(err + '.timely-scrape-failed')});;
     });
   });
 };
@@ -284,9 +283,8 @@ Model.fspath_t3pic = function(t3id){
       var dl_promise = Model.download_pic(t3.data.url, fspath);
       dl_promise.then( () => {
         reso(fspath);
-      });
-      dl_promise.catch( (err) => { rej(err + '.pic_dl_failed.'); });
-    }).catch ( err => {rej(err + '.t3_fspath_failed')});
+      }).catch( (err) => { rej(err + '.pic_dl_failed.'); });
+    }).catch ( err => {rej(err + '.fspath_t3pic_failed')});
   });
 };
 
@@ -298,8 +296,7 @@ Model.fspath_t3thumb = function(t3id){
       var dl_promise = Model.download_pic(t3.data.thumbnail, fspath);
       dl_promise.then( () => {
         reso(fspath);
-      });
-      dl_promise.catch( (err) => { rej(err + '.thumb_dl_failed.'); });
+      }).catch( (err) => { rej(err + '.thumb_dl_failed.'); });
     }).catch ( err => {rej(err + '.fspath_t3thumb_failed')});
   });
 };
