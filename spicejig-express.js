@@ -104,17 +104,17 @@ app.get('/blank/:color?', userify, spec_params,(req,res) => {
     req.spec.color = req.params.color;
   req.spec.width = 100;
   req.spec.height= 100;
-  res.render('puzzle.must', {title:'Blank Jigsaw', spec: JSON.stringify(req.spec), env: config.env});
+  res.render('puzzle.must', {title:'The Superman 64 of Dwarf Fortresses', spec: JSON.stringify(req.spec), env: config.env});
 });
 app.get('/scream', userify, spec_params, (req,res) => {
   req.spec.img_from = "scream";
   res.render('puzzle.must', {title:'😱 😱 😱 😱 😱', spec: JSON.stringify(req.spec), env: config.env});
 });
 
-app.get('/thumbzone', userify, spec_params, (req,res) => {
-  console.log(req.user.id + ' doing /thumbzone');
-  req.spec.mode= "zone";
-  res.render('puzzle.must', {title:'thumb', spec: JSON.stringify(req.spec), env: config.env});
+app.get('/overworld', userify, spec_params, (req,res) => {
+  console.log(req.user.id + ' doing /overworld');
+  req.spec.mode= "overworld";
+  res.render('puzzle.must', {title:'The Dwarf Fortress of casual jigsaw games', spec: JSON.stringify(req.spec), env: config.env});
 });
 
 app.get('/scrapereddit', function(req,res){
@@ -132,7 +132,7 @@ app.get('/t3_img/:t3id', (req,res) => {
       //stream.pipe(res);
     }).catch(err => {
       console.log('img for '+req.params.t3id+' not found');
-      if (/imgur-removed/.exec(err))
+      if (/host-removed/.exec(err))
         Model.purge_t3(req.params.t3id);
       res.status(404).json(err + '.nyxnyxnyx')
     });
