@@ -73,7 +73,11 @@ app.get('/',userify,spec_params, function(req, res) {
 app.get('/random',userify,spec_params, function(req, res) {
   console.log(req.user.id + ' doing /random');
   req.spec.img_from= "random";
-  res.render('puzzle.must', {title:'Jigsaw', spec: JSON.stringify(req.spec), env: config.env});
+  res.render('puzzle.must',
+    {
+      title:'The Dark Souls of Dwarf Fortresses',
+      spec: JSON.stringify(req.spec),
+      env: config.env});
 });
 
 app.get('/t3/:t3id',userify,spec_params, function(req, res) {
