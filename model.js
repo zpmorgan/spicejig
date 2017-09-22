@@ -9,6 +9,12 @@ var path = require('path');
 var Model = {};
 module.exports = Model;
 
+Model.select_db = async function(dbid){
+  return new Promise ((res,rej) => {
+    r_c.select(dbid, ()=>{res()})
+  })
+}
+
 Model.subreddit_pool = {
   'ImaginaryBestOf': {bias:35},
   'NoSillySuffix': {bias:20},
@@ -257,6 +263,10 @@ Model.download_pic = function(pic_url, fspath){
       }
       console.log('getting pic at ' + pic_url);
       var r = request.get(pic_url);
+      r.on('error', err => {
+        //console.log(err)
+        rej(err.toString());
+      });
       r.on('response', resp => {
         if(resp.statusCode === 200){
           if (resp.request.uri.href != pic_url){ //redirected, could be a 'not found' image
