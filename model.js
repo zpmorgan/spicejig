@@ -2,33 +2,43 @@
 var request = require('request');
 var rp = require('request-promise');
 var redis = require("redis");
-var r_c = redis.createClient();
 var fs = require('fs');
 var path = require('path');
 
-var Model = {};
-module.exports = Model;
+var Model = function(){
+  this.r_c = redis.createClient();
 
-Model.select_db = async function(dbid){
+  this.img_dir = "/tmp/t3_img";
+  this.thumb_dir = "/tmp/t3_thumb";
+
+  if (!fs.existsSync(this.thumb_dir))
+    fs.mkdirSync(this.img_dir, 0o744);
+  if (!fs.existsSync(this.thumb_dir))
+    fs.mkdirSync(this.thumb_dir, 0o744);
+
+  this.subreddit_pool = {
+    'ImaginaryBestOf': {bias:35},
+    'NoSillySuffix': {bias:20},
+    'ImaginaryMindscapes': {bias:20},
+    'wallpapers': {bias:5},
+    'MostBeautiful': {bias:5},
+    'VillagePorn': {bias:10},
+    'EarthPorn': {bias:8},
+    'nocontextpics': {bias:14},
+  };
+  this.subreddits = Object.keys(this.subreddit_pool);
+};
+
+module.exports = new Model();
+
+Model.prototype.select_db = async function(dbid){
   return new Promise ((res,rej) => {
-    r_c.select(dbid, ()=>{res()})
+    this.r_c.select(dbid, ()=>{res()})
   })
 }
 
-Model.subreddit_pool = {
-  'ImaginaryBestOf': {bias:35},
-  'NoSillySuffix': {bias:20},
-  'ImaginaryMindscapes': {bias:20},
-  'wallpapers': {bias:5},
-  'MostBeautiful': {bias:5},
-  'VillagePorn': {bias:10},
-  'EarthPorn': {bias:8},
-  'nocontextpics': {bias:14},
-};
-Model.subreddits = Object.keys(Model.subreddit_pool);
-
-Model.rand_subreddit_url = function(){
-  var s = Model.subreddits[Math.floor(Math.random()*Model.subreddits.length)];
+Model.prototype.rand_subreddit_url = function(){
+  var s = this.subreddits[Math.floor(Math.random()*this.subreddits.length)];
   //"https://www.reddit.com/r/ImaginaryMindscapes/top.json?limit=25&sort=top&t=all",
   var url;
   if (Math.random() > .5)
@@ -39,13 +49,13 @@ Model.rand_subreddit_url = function(){
 };
 
 //input the t3 hash or just the t3id
-Model.purge_t3 = function(t3){
+Model.prototype.purge_t3 = function(t3){
   let t3id = t3;
   if (typeof t3 == "object")
     t3id = t3.data.id;
-  r_c.hdel('t3',t3id);
-  r_c.srem('t3_set', t3id);
-  r_c.hset('purged_t3', t3id, 1);
+  this.r_c.hdel('t3',t3id);
+  this.r_c.srem('t3_set', t3id);
+  this.r_c.hset('purged_t3', t3id, 1);
   console.log('purged '+t3id);
 }
 function t3_desirable (t3){
@@ -75,16 +85,16 @@ function dot(p1,p2){
 }
 
 let selektion_increment = 0;
-Model.refresh_selektion = function(dims){
+Model.prototype.refresh_selektion = function(dims){
   let selektion_key = 't3_selektor' + selektion_increment;
   selektion_increment++;
   return new Promise( (reso,rej) => {
     if (!dims)
       rej('no dims')
-    Model.scrape_reddit_if_timely().then( () => {
-      r_c.srandmember('t3_set', 100, (err,t3ids) => {
+    this.scrape_reddit_if_timely().then( () => {
+      this.r_c.srandmember('t3_set', 100, (err,t3ids) => {
         if(err) {rej(err+".vbvbvb");return};
-        r_c.hmget('t3', t3ids, (err,t3s) => {
+        this.r_c.hmget('t3', t3ids, (err,t3s) => {
           if(err) {rej(err+".8d8d8d");return};
           for (let i=0; i < t3s.length; i++)
             t3s[i] = JSON.parse(t3s[i]);
@@ -92,7 +102,7 @@ Model.refresh_selektion = function(dims){
           //filter out nsfw and other undesirables
           var undesirables = t3s.filter(t3=> !t3_desirable(t3));
           for (let t3 of undesirables){
-            Model.purge_t3(t3);
+            this.purge_t3(t3);
           };
           t3s = t3s.filter( t3_desirable);
           var asp = normalize(dims);
@@ -119,7 +129,7 @@ Model.refresh_selektion = function(dims){
             newness_fitness += .1;
             //1.45 is 3 days ago, 0.84=11 days, 0.29=2 months, 0.11=23 months, etc.
 
-            let subreddit_bias = Model.subreddit_pool[t3.data.subreddit].bias;
+            let subreddit_bias = this.subreddit_pool[t3.data.subreddit].bias;
 
             t3.myscore = karma_fitness * dimensional_fitness * newness_fitness * subreddit_bias;
           }
@@ -133,12 +143,12 @@ Model.refresh_selektion = function(dims){
           for(let t3 of t3s){
             promises.push(new Promise( (rs,rj) => {
               score += t3.myscore / totscore;
-              r_c.zadd(selektion_key, score, t3.data.id, ()=> {rs()});
+              this.r_c.zadd(selektion_key, score, t3.data.id, ()=> {rs()});
             }));
           }
           Promise.all(promises).then( () => {
             //set our sorted set to expire after use.
-            r_c.expire(selektion_key, 10);
+            this.r_c.expire(selektion_key, 10);
             reso(selektion_key);
           }).catch( err => {console.log("blah!",err);rej(err + '.selektion-failure')});
         });
@@ -147,14 +157,14 @@ Model.refresh_selektion = function(dims){
   });
 };
 // this returns duplicates.
-Model.weighted_t3_selektion = function(n, dims){
+Model.prototype.weighted_t3_selektion = function(n, dims){
   return new Promise( (reso,rej)=>{
-    Model.refresh_selektion(dims).then( selektion_key => {
+    this.refresh_selektion(dims).then( selektion_key => {
       let promises = [];
       for (let i=0;i<n;i++){
         promises.push( new Promise ((rs,rj) => {
           //this returns an array, even when it's of one.
-          r_c.zrangebyscore(selektion_key, Math.random()*.9, 999, 'LIMIT', 0, 1, (err,t3) => {rs(t3[0])} );
+          this.r_c.zrangebyscore(selektion_key, Math.random()*.9, 999, 'LIMIT', 0, 1, (err,t3) => {rs(t3[0])} );
         }));
       }
       Promise.all(promises).then( selektion => {
@@ -164,19 +174,19 @@ Model.weighted_t3_selektion = function(n, dims){
   });
 };
 
-Model.scrape_reddit_if_timely = function(){
+Model.prototype.scrape_reddit_if_timely = function(){
   var d = new Date();
   var d_seconds = Math.round(d.getTime() / 1000);
   return new Promise( (reso,rej) => {
-    r_c.get('last_scrape_t', (err,t) => {
+    this.r_c.get('last_scrape_t', (err,t) => {
       if(t===null) t=0;
       else t = parseInt(t);
       if (t + 1000 > d_seconds){
         reso( {scraped: "no"} );
         return;
       }
-      r_c.set('last_scrape_t', d_seconds);
-      let scrape_promise = Model.scrape_reddit();
+      this.r_c.set('last_scrape_t', d_seconds);
+      let scrape_promise = this.scrape_reddit();
       scrape_promise.then( result => {
         reso( {scraped: "yes", scrape : result} );
         return;
@@ -185,9 +195,9 @@ Model.scrape_reddit_if_timely = function(){
   });
 };
 
-Model.scrape_reddit = function(){
+Model.prototype.scrape_reddit = function(){
   console.log('SCRAPE engaged!');
-  let url = Model.rand_subreddit_url();
+  let url = this.rand_subreddit_url();
   return new Promise ( (reso,rej) => {
     let rp_opts = {
       "uri" : url,
@@ -221,10 +231,10 @@ Model.scrape_reddit = function(){
         //re-insert. some data changes, such as reddit karma.
         let hundred_promises = [];
         hundred_promises.push(new Promise( (resx,rejx) => {
-          r_c.hget('purged_t3', t3.data.id, (is_purged) => {
+          this.r_c.hget('purged_t3', t3.data.id, (is_purged) => {
             if (!is_purged){
-              r_c.hset('t3', t3.data.id, JSON.stringify(t3));
-              r_c.sadd('t3_set', t3.data.id, () => { // for random selection
+              this.r_c.hset('t3', t3.data.id, JSON.stringify(t3));
+              this.r_c.sadd('t3_set', t3.data.id, () => { // for random selection
                 resx();
               });
             }
@@ -238,18 +248,10 @@ Model.scrape_reddit = function(){
   });
 };
 
-Model.img_dir = "/tmp/t3_img";
-Model.thumb_dir = "/tmp/t3_thumb";
-
-if (!fs.existsSync(Model.thumb_dir)) 
-  fs.mkdirSync(Model.img_dir, 0o744);
-if (!fs.existsSync(Model.thumb_dir)) 
-  fs.mkdirSync(Model.thumb_dir, 0o744);
-
 var pic_requests = {};
 
 //just resolves positive without downloading if it's at fspath already
-Model.download_pic = function(pic_url, fspath){
+Model.prototype.download_pic = function(pic_url, fspath){
   return new Promise((reso,rej) => {
     if (pic_requests[fspath]){
       reso();
@@ -270,7 +272,7 @@ Model.download_pic = function(pic_url, fspath){
       r.on('response', resp => {
         if(resp.statusCode === 200){
           if (resp.request.uri.href != pic_url){ //redirected, could be a 'not found' image
-            r_c.rpush('redirect_log', JSON.stringify({from:pic_url, to:resp.request.uri.href}));
+            this.r_c.rpush('redirect_log', JSON.stringify({from:pic_url, to:resp.request.uri.href}));
             console.log('redirection logged!');
             if (resp.request.uri.href == "http://i.imgur.com/removed.png" || 
                 resp.request.uri.href == 'https://s.yimg.com/pw/images/en-us/photo_unavailable.png'){
@@ -295,12 +297,12 @@ Model.download_pic = function(pic_url, fspath){
   });
 };
 
-Model.fspath_t3pic = function(t3id){
+Model.prototype.fspath_t3pic = function(t3id){
   var filename = t3id + '.jpg';
-  var fspath = Model.img_dir + '/' + filename;
+  var fspath = this.img_dir + '/' + filename;
   return new Promise( (reso,rej) => {
-    Model.t3_from_db(t3id).then( t3 => {
-      var dl_promise = Model.download_pic(t3.data.url, fspath);
+    this.t3_from_db(t3id).then( t3 => {
+      var dl_promise = this.download_pic(t3.data.url, fspath);
       dl_promise.then( () => {
         reso(fspath);
       }).catch( (err) => { rej(err + '.pic_dl_failed.'); });
@@ -308,12 +310,12 @@ Model.fspath_t3pic = function(t3id){
   });
 };
 
-Model.fspath_t3thumb = function(t3id){
+Model.prototype.fspath_t3thumb = function(t3id){
   var filename = t3id + '.jpg';
-  var fspath = Model.thumb_dir + '/' + filename;
+  var fspath = this.thumb_dir + '/' + filename;
   return new Promise( (reso,rej) => {
-    Model.t3_from_db(t3id).then( t3 => {
-      var dl_promise = Model.download_pic(t3.data.thumbnail, fspath);
+    this.t3_from_db(t3id).then( t3 => {
+      var dl_promise = this.download_pic(t3.data.thumbnail, fspath);
       dl_promise.then( () => {
         reso(fspath);
       }).catch( (err) => { rej(err + '.thumb_dl_failed.'); });
@@ -322,9 +324,9 @@ Model.fspath_t3thumb = function(t3id){
 };
 
 
-Model.t3_from_db = (t3id) => { //return a promise.
+Model.prototype.t3_from_db = function(t3id){ //return a promise.
   var p = new Promise( (resolve,rej) => {
-    r_c.hget('t3', t3id, (err, result) => {
+    this.r_c.hget('t3', t3id, (err, result) => {
       if (!result){
         rej(t3id + " not found as a t3 in redis");
       }
@@ -338,17 +340,18 @@ Model.t3_from_db = (t3id) => { //return a promise.
 };
 
 
-Model.user_from_json = json_stuff => {
+Model.prototype.user_from_json = function(json_stuff){
   var stuff = JSON.parse(json_stuff);
-  var u = new Model.User();
+  var u = new Model.User(this);
   u.id = stuff.id
   return u;
 }
-Model.User = function(){
+Model.User = function(m){
   // get a list of all the finished t3's
+  this.model = m;
   this.get_fin = () => {
     return new Promise( (resolve, rej) => {
-      r_c.hget('fin_by_user', this.id, (err,res) => {
+      this.model.r_c.hget('fin_by_user', this.id, (err,res) => {
         if (res === null)
           res = "{}";
         resolve(JSON.parse(res));
@@ -358,7 +361,7 @@ Model.User = function(){
   // fin_hash: {t3id : true,...} or {t3id:epochtime,...}
   this.set_fin = (fin_hash) => {
     return new Promise( (reso,rej) => {
-      r_c.hset('fin_by_user', this.id, JSON.stringify(fin_hash));
+      this.model.r_c.hset('fin_by_user', this.id, JSON.stringify(fin_hash));
       reso();
     });
   };
@@ -381,7 +384,7 @@ Model.User = function(){
   //return a random t3 that hasn't been fin'd by this user
   this.rand_unfinished_t3id = function(dims){
     return new Promise( (reso,rej)=>{
-      Model.weighted_t3_selektion(25, dims).then( t3ids => {
+      this.model.weighted_t3_selektion(25, dims).then( t3ids => {
         this.get_fin().then ( (fin) => {
           for (let t3id of t3ids){
             if (!fin[t3id]){
@@ -402,7 +405,7 @@ Model.User = function(){
           rej('no t3 found for dims:' + dims);
           return;
         }
-        Model.t3_from_db (t3id)
+        this.model.t3_from_db (t3id)
           .then( t3 => { //return a promise.
             reso(t3);
           })
@@ -415,38 +418,38 @@ Model.User = function(){
 };
 
 
-Model.get_user = (userid) => {
+Model.prototype.get_user = function(userid){
   return new Promise( (resolve,reject) => {
-    r_c.hget('user',userid, function(err,user_json){
-      resolve(Model.user_from_json(user_json));
+    this.r_c.hget('user',userid, (err,user_json) => {
+      resolve(this.user_from_json(user_json));
     });
   });
 };
 
-Model.gen_new_user = function(){
+Model.prototype.gen_new_user = function(){
   return new Promise( (resolve,reject) => {
-    r_c.incr('next_userid', function(err,nextid){
+    this.r_c.incr('next_userid', (err,nextid) => {
       if(err)
         reject(err + '.asdf9');
-      var user = new Model.User();
+      var user = new this.User();
       user.id = nextid;
-      r_c.hset('user', nextid, JSON.stringify(user));
+      this.r_c.hset('user', nextid, JSON.stringify(user));
       resolve(user);
     });
   });
 }
 
 // generate a new user if one doesn't exist
-Model.get_user_from_session_id = function(sessid){
+Model.prototype.get_user_from_session_id = function(sessid){
   return new Promise( (resolve, reject) => {
-    r_c.hget('sess_userid', sessid, (err,userid) => {
+    this.r_c.hget('sess_userid', sessid, (err,userid) => {
       if(userid === null)
-        Model.gen_new_user().then( (user) => {
-          r_c.hset('sess_userid', sessid, user.id);
+        this.gen_new_user().then( (user) => {
+          this.r_c.hset('sess_userid', sessid, user.id);
           resolve(user);
           return;
         });
-      else Model.get_user(userid).then( (user) => {resolve(user)});
+      else this.get_user(userid).then( (user) => {resolve(user)});
     });
   });
 };
