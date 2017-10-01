@@ -454,3 +454,26 @@ Model.prototype.get_user_from_session_id = function(sessid){
   });
 };
 
+// url resolve
+const hostImageResolver = require('host-image-resolver'); //for deviantart
+let da = 'https://raedrob.deviantart.com/art/Desert-Guardian-704243861';
+
+let da_url_regex = new RegExp('https?://.+\.deviantart\.com/art')
+
+Model.prototype.resolve_pic_url = function(url){
+  return new Promise ((resolve,reject) => {
+    if (da_url_regex.test(url)){
+      hostImageResolver(url).then( (da_resolved) => {
+        resolve(da_resolved[0]);
+      }).catch( err=> {
+        console.log(234532);
+        reject(err + '.da_rejected')
+      });
+    }
+    else {
+      reject('dunno about url: '+url)
+    }
+  });
+}
+
+
