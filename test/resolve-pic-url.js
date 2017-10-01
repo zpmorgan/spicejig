@@ -37,3 +37,19 @@ test ('bad_da_url', async function(t){
   t.plan(1)
   await t.throws(Model.resolve_pic_url(bad_da_url))
 });
+
+
+let flickr_url = 'https://www.flickr.com/photos/peterstahl/37394766835/in/dateposted/'
+test('resolve_flickr', async function(t){
+  t.plan(1);
+  let flickr_jpg = await Model.resolve_pic_url(flickr_url);
+  t.is(flickr_jpg, 'https://farm5.staticflickr.com/4500/37394766835_628b76c8a3_b.jpg');
+});
+
+let bad_flickr_url = 'https://www.flickr.com/photos/asdhaug/2824523892734';
+test ('flick_bad_url', async function(t){
+  t.plan(1)
+  await t.throws(Model.resolve_pic_url(bad_da_url))
+});
+
+

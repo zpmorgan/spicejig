@@ -456,9 +456,12 @@ Model.prototype.get_user_from_session_id = function(sessid){
 
 // url resolve
 const hostImageResolver = require('host-image-resolver'); //for deviantart
-let da = 'https://raedrob.deviantart.com/art/Desert-Guardian-704243861';
+const ImageResolver = require('image-resolver');
+let f_resolver = new ImageResolver(); // for flickr
+f_resolver.register(new ImageResolver.Flickr('8eff3730543b7288dd66d3a0c25d3be1'));
 
 let da_url_regex = new RegExp('https?://.+\.deviantart\.com/art')
+let flickr_url_regex = new RegExp('https?://www\.flickr\.com/photos')
 
 Model.prototype.resolve_pic_url = function(url){
   return new Promise ((resolve,reject) => {
@@ -468,6 +471,11 @@ Model.prototype.resolve_pic_url = function(url){
       }).catch( err=> {
         console.log(234532);
         reject(err + '.da_rejected')
+      });
+    }
+    else if (flickr_url_regex.test(url)){
+      f_resolver.resolve(url, (urls) => {
+        resolve(urls.image);
       });
     }
     else {
