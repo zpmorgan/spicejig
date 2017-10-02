@@ -4,6 +4,7 @@ var rp = require('request-promise');
 var redis = require("redis");
 var fs = require('fs');
 var path = require('path');
+var config = require('./config.json');
 
 var Model = function(){
   this.r_c = redis.createClient();
@@ -462,7 +463,7 @@ Model.prototype.get_user_from_session_id = function(sessid){
 const hostImageResolver = require('host-image-resolver'); //for deviantart
 const ImageResolver = require('image-resolver');
 let f_resolver = new ImageResolver(); // for flickr
-f_resolver.register(new ImageResolver.Flickr('8eff3730543b7288dd66d3a0c25d3be1'));
+f_resolver.register(new ImageResolver.Flickr(config['flickr-key']));
 let imgur_resolver = new ImageResolver();
 imgur_resolver.register(new ImageResolver.ImgurPage());
 

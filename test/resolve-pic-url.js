@@ -1,5 +1,7 @@
 import test from 'ava';
 let Model = require('../model');
+let Common = require('./_test-common.js');
+let config = Common.get_config();
 
 let fake_t3 = {
   data:{
