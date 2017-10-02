@@ -52,4 +52,14 @@ test ('flick_bad_url', async function(t){
   await t.throws(Model.resolve_pic_url(bad_da_url))
 });
 
+let imgur_album_url = 'https://imgur.com/a/r4xA9'; // i dont feel like supporting albums
+let imgur_page_url = 'https://imgur.com/f4R101K';
+test('imgur_page_url', async function(t){
+  t.plan(1);
+  let imgur_jpg1 = await Model.resolve_pic_url(imgur_page_url);
+  t.is(imgur_jpg1, 'https://i.imgur.com/f4R101K.jpg');
+});
+
+
+
 

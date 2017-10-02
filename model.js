@@ -69,7 +69,7 @@ function t3_desirable (t3){
     return false;
   if(/quotes/i.exec(t3.data.title)) // filter out quotes porn
     return false;
-  if(t3.data.preview.images[0].source.width * t3.data.preview.images[0].source.height > 5000000) //filter out hubble deep field, please
+  if(t3.data.preview.images[0].source.width * t3.data.preview.images[0].source.height > 9000000) //filter out hubble deep field, please
     return false;
   if(!/\.jpg/.exec(t3.data.url)) // filter out stuff that is not a jpeg
     return false;
@@ -214,15 +214,19 @@ Model.prototype.scrape_reddit = function(){
       }
       console.log('SCRAPE gives '+t3s.length+ ' t3s from '+ url);
       for (let t3 of t3s){
-        t3.orig_url = t3.data.url; // it may change from a page url.
-        if (t3.data.url.match(/\.gif|gallery/))
+        if (t3.data.url.match(/\.gif|gallery|album/))
           continue;
 
-        //translate imgur to i.imgur
+        //translate imgur to i.imgur, also resolve flickr & deviantart
         //TODO: what if http://imgur.com/AsDfGhJk or whatever is an animated gif? I dont even know
-        var match = t3.data.url.match(/http:\/\/imgur.com\/([a-zA-Z0-9]{5,})/);
-        if (match){
-          t3.data.url = "http://i.imgur.com/" + match[1] + ".jpg";
+        t3.orig_url = t3.data.url; // it may change from a page url.
+        let should_resolve_url_regex = new RegExp(
+          da_url_regex.source + '|' +
+          flickr_url_regex.source + '|' +
+          imgur_page_url_regex.source
+        );
+        if (should_resolve_url_regex.test(t3.data.url)){
+          t3.data.url = this.resolve_pic_url(t3.data.url);
         }
 
         // run a bunch of filters: nsfw, jpg, score, size, etc.
@@ -342,11 +346,11 @@ Model.prototype.t3_from_db = function(t3id){ //return a promise.
 
 Model.prototype.user_from_json = function(json_stuff){
   var stuff = JSON.parse(json_stuff);
-  var u = new Model.User(this);
+  var u = new this.User(this);
   u.id = stuff.id
   return u;
 }
-Model.User = function(m){
+Model.prototype.User = function(m){
   // get a list of all the finished t3's
   this.model = m;
   this.get_fin = () => {
@@ -459,28 +463,52 @@ const hostImageResolver = require('host-image-resolver'); //for deviantart
 const ImageResolver = require('image-resolver');
 let f_resolver = new ImageResolver(); // for flickr
 f_resolver.register(new ImageResolver.Flickr('8eff3730543b7288dd66d3a0c25d3be1'));
+let imgur_resolver = new ImageResolver();
+imgur_resolver.register(new ImageResolver.ImgurPage());
 
 let da_url_regex = new RegExp('https?://.+\.deviantart\.com/art')
 let flickr_url_regex = new RegExp('https?://www\.flickr\.com/photos')
+let imgur_page_url_regex = new RegExp('https?://imgur\.com/[a-zA-Z0-9]{2,}') //no albums
+
+//cache resolutions in redis hash 'url_resolutions': url to resolved url
 
 Model.prototype.resolve_pic_url = function(url){
   return new Promise ((resolve,reject) => {
-    if (da_url_regex.test(url)){
-      hostImageResolver(url).then( (da_resolved) => {
-        resolve(da_resolved[0]);
-      }).catch( err=> {
-        console.log(234532);
-        reject(err + '.da_rejected')
-      });
-    }
-    else if (flickr_url_regex.test(url)){
-      f_resolver.resolve(url, (urls) => {
-        resolve(urls.image);
-      });
-    }
-    else {
-      reject('dunno about url: '+url)
-    }
+    this.r_c.hget('url_resolutions', url, (resolvd_url) => {
+      if (resolvd_url)
+        resolve(resolvd_url);
+      if (da_url_regex.test(url)){
+        hostImageResolver(url).then( (da_resolved) => {
+          console.log('resolved '+url+' to '+da_resolved[0]);
+          this.r_c.hset('url_resolutions', url, da_resolved[0])
+          resolve(da_resolved[0]);
+        }).catch( err=> {
+          reject(err + '.da_rejected')
+        });
+      }
+      else if (flickr_url_regex.test(url)){
+        f_resolver.resolve(url, (asdf) => {
+          if (asdf == null){
+            console.log(url + ' resolution is NULL.');
+            reject (url + ' resolution is NULL');
+          }
+          console.log('resolved '+url+' to '+asdf.image);
+          this.r_c.hset('url_resolutions', url, asdf.image)
+          resolve(asdf.image);
+        });
+      }
+      else if (imgur_page_url_regex.test(url)){
+        imgur_resolver.resolve(url, asdf => {
+          console.log('resolved '+url+' to '+asdf.image);
+          this.r_c.hset('url_resolutions', url, asdf.image)
+          resolve(asdf.image);
+        });
+      }
+      else {
+        console.log(24532432459342);
+        reject('dunno about url: '+url)
+      }
+    });
   });
 }
 
