@@ -492,6 +492,7 @@ Model.prototype.resolve_pic_url = function(url){
           if (asdf == null){
             console.log(url + ' resolution is NULL.');
             reject (url + ' resolution is NULL');
+            return;
           }
           console.log('resolved '+url+' to '+asdf.image);
           this.r_c.hset('url_resolutions', url, asdf.image)
