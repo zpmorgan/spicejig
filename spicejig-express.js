@@ -66,6 +66,7 @@ var spec_params = function(req,res,next){
 
 // make it rain
 app.get('/',userify,spec_params, function(req, res) {
+  console.log(req.user.id + ' doing /');
   req.spec.mode= "rain";
   res.render('puzzle.must', {title:'The Dark Souls of casual jigsaw games', spec: JSON.stringify(req.spec), env: config.env});
 });
@@ -111,6 +112,7 @@ app.get('/blank/:color?', userify, spec_params,(req,res) => {
   res.render('puzzle.must', {title:'The Superman 64 of Dwarf Fortresses', spec: JSON.stringify(req.spec), env: config.env});
 });
 app.get('/scream', userify, spec_params, (req,res) => {
+  console.log(req.user.id + ' doing /scream');
   req.spec.img_from = "scream";
   res.render('puzzle.must', {title:'😱 😱 😱 😱 😱', spec: JSON.stringify(req.spec), env: config.env});
 });
