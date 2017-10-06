@@ -124,7 +124,7 @@ app.get('/overworld', userify, spec_params, (req,res) => {
 });
 
 app.get('/scrapereddit', function(req,res){
-  Model.scrape_reddit().then(function(thing){
+  Model.pools.default.scrape().then(function(thing){
     res.json(thing);
   });
 });
@@ -171,12 +171,10 @@ app.get('/rand_puz_t3/', userify, function(req,res){
     req.user.rand_unfinished_t3(dims).then( (tng) => {
       resolve(tng);
     }).catch( err=>{ reject(err + '.p3p3') });;
-  });
-  p.then( (tng) => {
+  }).then( (tng) => {
     console.log(req.user.id + ' rolled '+ tng.data.id);
     res.json(tng)
-  });
-  p.catch( err => {res.json(err + '.dadadadada')});
+  }).catch( err => {res.status(404).json(err + '.dadadadada')});
 });
 
 
