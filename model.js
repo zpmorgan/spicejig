@@ -1,7 +1,7 @@
 "use strict";
 var request = require('request');
 var rp = require('request-promise');
-var redis = require("redis");
+var redis = require("ioredis");
 var fs = require('fs');
 var path = require('path');
 var config = require('./config.json');
