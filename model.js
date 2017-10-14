@@ -223,18 +223,58 @@ Model.prototype.Pool = function(m, name, subreddits){
       });
     });
   };
+  this.fspath_t3pic = function(t3id){
+    var filename = t3id + '.jpg';
+    var fspath = this.model.img_dir + '/' + filename;
+    return new Promise( (reso,rej) => {
+      this.t3_from_db(t3id).then( t3 => {
+        var dl_promise = this.model.download_pic(t3.data.url, fspath);
+        dl_promise.then( () => {
+          reso(fspath);
+        }).catch( (err) => { rej(err + '.pic_dl_failed.'); });
+      }).catch ( err => {rej(err + '.fspath_t3pic_failed')});
+    });
+  };
+
+  this.fspath_t3thumb = function(t3id){
+    var filename = t3id + '.jpg';
+    var fspath = this.model.thumb_dir + '/' + filename;
+    return new Promise( (reso,rej) => {
+      this.t3_from_db(t3id).then( t3 => {
+        var dl_promise = this.model.download_pic(t3.data.thumbnail, fspath);
+        dl_promise.then( () => {
+          reso(fspath);
+        }).catch( (err) => { rej(err + '.thumb_dl_failed.'); });
+      }).catch ( err => {rej(err + '.fspath_t3thumb_failed')});
+    });
+  };
+
+
+  this.t3_from_db = function(t3id){ //return a promise.
+    var p = new Promise( (resolve,rej) => {
+      this.model.r_c.hget(this.t3_hash_key, t3id, (err, result) => {
+        if (!result){
+          rej(t3id + " not found as a t3 in redis");
+        }
+        else {
+          var thing = JSON.parse(result);
+          resolve(thing);
+        }
+      });
+    });
+    return p;
+  };
 }
   
-
-
-
 //input the t3 hash or just the t3id
 Model.prototype.purge_t3 = function(t3){
   let t3id = t3;
   if (typeof t3 == "object")
     t3id = t3.data.id;
-  this.r_c.hdel('t3',t3id);
-  this.r_c.srem('t3_set', t3id);
+  for (let pool in this.pools){
+    this.r_c.hdel(pool.t3_hash_key,t3id);
+    this.r_c.srem(pool.t3_set_key, t3id);
+  }
   this.r_c.hset('purged_t3', t3id, 1);
   console.log('purged '+t3id);
 }
@@ -249,7 +289,9 @@ function t3_desirable (t3){
     return false;
   if(/quotes/i.exec(t3.data.title)) // filter out quotes porn
     return false;
-  if(t3.data.preview.images[0].source.width * t3.data.preview.images[0].source.height > 9000000) //filter out hubble deep field, please
+  //find the number of pixels; filter out the hubble deep field, and other absurdly big things
+  //increase by 5% per year until phones catch up to hubble
+  if(t3.data.preview.images[0].source.width * t3.data.preview.images[0].source.height > 9000000)
     return false;
   if(!/\.jpg/.exec(t3.data.url)) // filter out stuff that is not a jpeg
     return false;
@@ -316,47 +358,6 @@ Model.prototype.download_pic = function(pic_url, fspath){
   });
 };
 
-Model.prototype.fspath_t3pic = function(t3id){
-  var filename = t3id + '.jpg';
-  var fspath = this.img_dir + '/' + filename;
-  return new Promise( (reso,rej) => {
-    this.t3_from_db(t3id).then( t3 => {
-      var dl_promise = this.download_pic(t3.data.url, fspath);
-      dl_promise.then( () => {
-        reso(fspath);
-      }).catch( (err) => { rej(err + '.pic_dl_failed.'); });
-    }).catch ( err => {rej(err + '.fspath_t3pic_failed')});
-  });
-};
-
-Model.prototype.fspath_t3thumb = function(t3id){
-  var filename = t3id + '.jpg';
-  var fspath = this.thumb_dir + '/' + filename;
-  return new Promise( (reso,rej) => {
-    this.t3_from_db(t3id).then( t3 => {
-      var dl_promise = this.download_pic(t3.data.thumbnail, fspath);
-      dl_promise.then( () => {
-        reso(fspath);
-      }).catch( (err) => { rej(err + '.thumb_dl_failed.'); });
-    }).catch ( err => {rej(err + '.fspath_t3thumb_failed')});
-  });
-};
-
-
-Model.prototype.t3_from_db = function(t3id){ //return a promise.
-  var p = new Promise( (resolve,rej) => {
-    this.r_c.hget('t3', t3id, (err, result) => {
-      if (!result){
-        rej(t3id + " not found as a t3 in redis");
-      }
-      else {
-        var thing = JSON.parse(result);
-        resolve(thing);
-      }
-    });
-  });
-  return p;
-};
 
 
 Model.prototype.user_from_json = function(json_stuff){
@@ -424,7 +425,7 @@ Model.prototype.User = function(m){
           rej('no t3 found for dims:' + dims);
           return;
         }
-        this.model.t3_from_db (t3id)
+        this.model.pools.default.t3_from_db (t3id)
           .then( t3 => { //return a promise.
             reso(t3);
           })
@@ -521,7 +522,6 @@ Model.prototype.resolve_pic_url = function(url){
         });
       }
       else {
-        console.log(24532432459342);
         reject('dunno about url: '+url)
       }
     });

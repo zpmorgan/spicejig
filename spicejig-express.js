@@ -82,7 +82,8 @@ app.get('/random',userify,spec_params, function(req, res) {
 });
 
 app.get('/t3/:t3id',userify,spec_params, function(req, res) {
-  Model.t3_from_db(req.params.t3id).then(t3 => {
+  let pool = Model.pools["default"];
+  pool.t3_from_db(req.params.t3id).then(t3 => {
     req.spec.img_from = 'reddit';
     req.spec.t3 = t3;
     //for (var attrname in req.spec) { spec[attrname] = req.spec[attrname]; }
@@ -94,11 +95,11 @@ app.get('/t3/:t3id',userify,spec_params, function(req, res) {
 });
 
 app.get('/t3data/:t3id', userify, (req,res) => {
-  Model.t3_from_db(req.params.t3id).then(t3 => {
+  let pool = Model.pools["default"];
+  pool.t3_from_db(req.params.t3id).then(t3 => {
     //this somehow makes it pretty in the browser.
     res.set({'Content-Type': 'application/json; charset=utf-8'}).status(200).send(JSON.stringify(t3, undefined, ' '));
-  })
-  .catch( err => {res.json(err)});
+  }).catch( err => {res.json(err)});
 });
 
 app.get('/blank/:color?', userify, spec_params,(req,res) => {
@@ -131,7 +132,8 @@ app.get('/scrapereddit', function(req,res){
 
 app.get('/t3_img/:t3id', (req,res) => {
   //Model.stream_t3pic(req.params.t3id)
-  Model.fspath_t3pic(req.params.t3id)
+  let pool = Model.pools["default"];
+  pool.fspath_t3pic(req.params.t3id)
     .then( fspath => {
       res.setHeader("content-type", "image/jpeg");
       res.sendFile(fspath);
@@ -149,8 +151,9 @@ app.get('/thumb/:t3id', userify, (req,res) => {
   let dims = [1.61,1];
   if (req.query.width && req.query.height)
     dims = [req.query.width, req.query.height];
+  let pool = Model.pools["default"];
   req.user.rand_unfinished_t3(dims).then( (tng) => {
-    Model.fspath_t3thumb(tng.data.id).then( (fspath) => {
+    pool.fspath_t3thumb(tng.data.id).then( (fspath) => {
       res.setHeader("content-type", "image/jpeg");
       res.sendFile(fspath);
     }).catch( err => {

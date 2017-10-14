@@ -8,7 +8,7 @@ test.before( async () => {
 });
 
 test ('another_pool', async function(t){
-  t.plan(2);
+  t.plan(5);
 
   Model.pools = {};
   Model.add_subreddit_pool('VillagePorn', {
@@ -20,8 +20,16 @@ test ('another_pool', async function(t){
   let scrape_url = Model.pools.VillagePorn.rand_subreddit_url();
   t.regex(scrape_url, new RegExp('https://www.reddit.com/r/VillagePorn.*json.*'));
   await Model.pools.VillagePorn.scrape();
+  await Model.pools.funny.scrape();
   let count = await Model.r_c.hlen(Model.pools.VillagePorn.t3_hash_key);
   t.true (count>10);
+
+  let t3s = await Model.pools.funny.weighted_t3_selektion(3, [1,1]);
+  t.log(t3s);
+  for (let t3id of t3s){
+    let t3 = await Model.pools.funny.t3_from_db(t3id);
+    t.is(t3.data.subreddit, 'funny');
+  };
 });
 
 test.after( async t => {
