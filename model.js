@@ -46,25 +46,6 @@ Model.prototype.purge_t3 = function(t3){
   this.r_c.hset('purged_t3', t3id, 1);
   console.log('purged '+t3id);
 }
-function t3_desirable (t3){
-  if(t3.data.thumbnail === 'self') // filter out self posts
-    return false;
-  if(t3.data.thumbnail === 'nsfw') // someone gets paid to play games at work.
-    return false;
-  if(t3.data.preview === undefined) // prolly 404, or I think other undesirables.
-    return false;
-  if(t3.data.score <= 15) // we want variety but we dont want crap
-    return false;
-  if(/quotes/i.exec(t3.data.title)) // filter out quotes porn
-    return false;
-  //find the number of pixels; filter out the hubble deep field, and other absurdly big things
-  //increase by 5% per year until phones catch up to hubble
-  if(t3.data.preview.images[0].source.width * t3.data.preview.images[0].source.height > 9000000)
-    return false;
-  if(!/\.jpg/.exec(t3.data.url)) // filter out stuff that is not a jpeg
-    return false;
-  return true;
-};
 
 var pic_requests = {};
 

@@ -235,6 +235,34 @@ ImagePool.prototype.t3_from_db = function(t3id){ //return a promise.
   return p;
 };
 
+function t3_desirable (t3){
+  if(t3.data.thumbnail === 'self') // filter out self posts
+    return false;
+  if(t3.data.thumbnail === 'nsfw') // someone gets paid to play games at work.
+    return false;
+  if(t3.data.preview === undefined) // prolly 404, or I think other undesirables.
+    return false;
+  if(t3.data.score <= 15) // we want variety but we dont want crap
+    return false;
+  if(/quotes/i.exec(t3.data.title)) // filter out quotes porn
+    return false;
+  //find the number of pixels; filter out the hubble deep field, and other absurdly big things
+  //increase by 5% per year until phones catch up to hubble
+  if(t3.data.preview.images[0].source.width * t3.data.preview.images[0].source.height > 9000000)
+    return false;
+  if(!/\.jpg/.exec(t3.data.url)) // filter out stuff that is not a jpeg
+    return false;
+  return true;
+};
+function normalize(p){
+    var magnitude = Math.sqrt(p[0]*p[0] + p[1]*p[1]);
+    return [p[0]/magnitude, p[1]/magnitude];
+  };
+function dot(p1,p2){
+    return p1[0]*p2[0] + p1[1]*p2[1];
+  }
+
+
 module.exports = ImagePool;
 
 
