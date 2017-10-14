@@ -66,14 +66,6 @@ function t3_desirable (t3){
   return true;
 };
 
-function normalize(p){
-  var magnitude = Math.sqrt(p[0]*p[0] + p[1]*p[1]);
-  return [p[0]/magnitude, p[1]/magnitude];
-};
-function dot(p1,p2){
-  return p1[0]*p2[0] + p1[1]*p2[1];
-}
-
 var pic_requests = {};
 
 //just resolves positive without downloading if it's at fspath already
