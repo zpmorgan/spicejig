@@ -6,6 +6,9 @@ var fs = require('fs');
 var path = require('path');
 var config = require('./config.json');
 
+let ImagePool = require('./model/pool.js');
+let User = require('./model/user.js');
+
 var Model = function(){
   this.r_c = redis.createClient();
 
@@ -18,8 +21,6 @@ var Model = function(){
     fs.mkdirSync(this.thumb_dir, 0o744);
 
   this.pools = {};
-
-  //this.subreddits = Object.keys(this.subreddit_pool);
 };
 
 Model.prototype.select_db = async function(dbid){
@@ -27,8 +28,6 @@ Model.prototype.select_db = async function(dbid){
     this.r_c.select(dbid, ()=>{res()})
   })
 }
-
-let ImagePool = require('./model/pool.js');
 
 Model.prototype.add_subreddit_pool = function(name, subreddits){
   let pool = new ImagePool(this, name, subreddits);
@@ -74,9 +73,6 @@ function normalize(p){
 function dot(p1,p2){
   return p1[0]*p2[0] + p1[1]*p2[1];
 }
-
-
-
 
 var pic_requests = {};
 
@@ -131,81 +127,10 @@ Model.prototype.download_pic = function(pic_url, fspath){
 
 Model.prototype.user_from_json = function(json_stuff){
   var stuff = JSON.parse(json_stuff);
-  var u = new this.User(this);
+  var u = new User(this);
   u.id = stuff.id
   return u;
 }
-Model.prototype.User = function(m){
-  // get a list of all the finished t3's
-  this.model = m;
-  this.get_fin = () => {
-    return new Promise( (resolve, rej) => {
-      this.model.r_c.hget('fin_by_user', this.id, (err,res) => {
-        if (res === null)
-          res = "{}";
-        resolve(JSON.parse(res));
-      });
-    });
-  }
-  // fin_hash: {t3id : true,...} or {t3id:epochtime,...}
-  this.set_fin = (fin_hash) => {
-    return new Promise( (reso,rej) => {
-      this.model.r_c.hset('fin_by_user', this.id, JSON.stringify(fin_hash));
-      reso();
-    });
-  };
-
-  //mark a t3 as finished by this user.
-  //returns the same thing as user.get_fin
-  this.fin_t3 = (t3id, val) => {
-    if (val === undefined)
-      val = true;
-    return new Promise( (resolve,rej) => {
-      this.get_fin().then( fins=>{
-        fins[t3id] = val;
-        this.set_fin(fins).then( () => {
-          resolve(fins);
-        });
-      });
-    });
-  };
-
-  //return a random t3 that hasn't been fin'd by this user
-  this.rand_unfinished_t3id = function(dims){
-    return new Promise( (reso,rej)=>{
-      this.model.pools.default.weighted_t3_selektion(25, dims).then( t3ids => {
-        this.get_fin().then ( (fin) => {
-          for (let t3id of t3ids){
-            if (!fin[t3id]){
-              reso(t3id);
-              return;
-            }
-          }
-          rej('tried 10, nothing new found');
-        });
-      }).catch(err => {rej(err + '.rand_t3id_fail')});
-    });
-  }
-  this.rand_unfinished_t3 = function(dims){
-    return new Promise( (reso,rej)=>{
-      this.rand_unfinished_t3id(dims).then( t3id => {
-        if (!t3id){
-          console.log('no t3 found for dims:' + dims);
-          rej('no t3 found for dims:' + dims);
-          return;
-        }
-        this.model.pools.default.t3_from_db (t3id)
-          .then( t3 => { //return a promise.
-            reso(t3);
-          })
-          .catch( err => {
-            rej('t3 getting err: '+ err + '.bifffff');
-          });
-      }).catch( err => {rej('couldnt get a rand id'+ err + '.mikmik')});;
-    });
-  };
-};
-
 
 Model.prototype.get_user = function(userid){
   return new Promise( (resolve,reject) => {
@@ -220,7 +145,7 @@ Model.prototype.gen_new_user = function(){
     this.r_c.incr('next_userid', (err,nextid) => {
       if(err)
         reject(err + '.asdf9');
-      var user = new this.User();
+      var user = new User();
       user.id = nextid;
       this.r_c.hset('user', nextid, JSON.stringify(user));
       resolve(user);
