@@ -1,6 +1,5 @@
 "use strict";
 var request = require('request');
-var rp = require('request-promise');
 var redis = require("ioredis");
 var fs = require('fs');
 var path = require('path');
@@ -149,9 +148,9 @@ f_resolver.register(new ImageResolver.Flickr(config['flickr-key']));
 let imgur_resolver = new ImageResolver();
 imgur_resolver.register(new ImageResolver.ImgurPage());
 
-let da_url_regex = new RegExp('https?://.+\.deviantart\.com/art')
-let flickr_url_regex = new RegExp('https?://www\.flickr\.com/photos')
-let imgur_page_url_regex = new RegExp('https?://imgur\.com/[a-zA-Z0-9]{2,}') //no albums
+Model.prototype.da_url_regex = new RegExp('https?://.+\.deviantart\.com/art')
+Model.prototype.flickr_url_regex = new RegExp('https?://www\.flickr\.com/photos')
+Model.prototype.imgur_page_url_regex = new RegExp('https?://imgur\.com/[a-zA-Z0-9]{2,}') //no albums
 
 //cache resolutions in redis hash 'url_resolutions': url to resolved url
 
@@ -160,7 +159,7 @@ Model.prototype.resolve_pic_url = function(url){
     this.r_c.hget('url_resolutions', url, (resolvd_url) => {
       if (resolvd_url)
         resolve(resolvd_url);
-      if (da_url_regex.test(url)){
+      if (this.da_url_regex.test(url)){
         hostImageResolver(url).then( (da_resolved) => {
           console.log('resolved '+url+' to '+da_resolved[0]);
           this.r_c.hset('url_resolutions', url, da_resolved[0])
@@ -169,7 +168,7 @@ Model.prototype.resolve_pic_url = function(url){
           reject(err + '.da_rejected')
         });
       }
-      else if (flickr_url_regex.test(url)){
+      else if (this.flickr_url_regex.test(url)){
         f_resolver.resolve(url, (asdf) => {
           if (asdf == null){
             console.log(url + ' resolution is NULL.');
@@ -181,7 +180,7 @@ Model.prototype.resolve_pic_url = function(url){
           resolve(asdf.image);
         });
       }
-      else if (imgur_page_url_regex.test(url)){
+      else if (this.imgur_page_url_regex.test(url)){
         imgur_resolver.resolve(url, asdf => {
           console.log('resolved '+url+' to '+asdf.image);
           this.r_c.hset('url_resolutions', url, asdf.image)

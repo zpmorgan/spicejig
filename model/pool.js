@@ -1,8 +1,11 @@
 
+let rp = require('request-promise');
+
 // per-pool redis keys:
 // pool_{{name}}_set
 // pool_{{name}}_hash
 // pool_{{name}}_t3_selektor_{{num}} (these expire after a few secs)
+// pool_{{name}}_last_scrape
 
 ImagePool = function(m, name, subreddits){
   this.model = m;
@@ -116,8 +119,8 @@ ImagePool.prototype.weighted_t3_selektion = function(n, dims){
   });
 };
 ImagePool.prototype.scrape = function(){
-  console.log('SCRAPE engaged!');
   let url = this.rand_subreddit_url();
+  console.log('SCRAPE engaged! ' + url);
   return new Promise ( (reso,rej) => {
     let rp_opts = {
       "uri" : url,
@@ -141,9 +144,9 @@ ImagePool.prototype.scrape = function(){
         //TODO: what if http://imgur.com/AsDfGhJk or whatever is an animated gif? I dont even know
         t3.orig_url = t3.data.url; // it may change from a page url.
         let should_resolve_url_regex = new RegExp(
-          da_url_regex.source + '|' +
-          flickr_url_regex.source + '|' +
-          imgur_page_url_regex.source
+          this.model.da_url_regex.source + '|' +
+          this.model.flickr_url_regex.source + '|' +
+          this.model.imgur_page_url_regex.source
         );
         if (should_resolve_url_regex.test(t3.data.url)){
           t3.data.url = this.model.resolve_pic_url(t3.data.url);
