@@ -187,7 +187,8 @@ app.get('/fin/:t3id', userify, (req,res) => {
     res.json({ //success
       fins: fins,
       ok : 'ok'});
-  }, reason => { //fail
+  }).catch( reason => { //fail
+    console.log ( 'user '+req.user.id+ ' failed to fin\'d puzzle '+req.params.t3id + ',reason: '+reason);
     res.json({
       ok: 'not really',
       reason: reason

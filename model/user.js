@@ -2,18 +2,20 @@
 let User = function(m){
   // get a list of all the finished t3's
   this.model = m;
-  this.get_fin = () => {
-    return new Promise( (resolve, rej) => {
-      this.model.r_c.hget('fin_by_user', this.id, (err,res) => {
-        if (res === null)
-          res = "{}";
-        resolve(JSON.parse(res));
-      });
-    });
-  }
 }
+
+User.prototype.get_fin = function(){
+  return new Promise( (resolve, rej) => {
+    this.model.r_c.hget('fin_by_user', this.id, (err,res) => {
+      if (res === null)
+        res = "{}";
+      resolve(JSON.parse(res));
+    });
+  });
+}
+
 // fin_hash: {t3id : true,...} or {t3id:epochtime,...}
-User.prototype.set_fin = (fin_hash) => {
+User.prototype.set_fin = function(fin_hash){
   return new Promise( (reso,rej) => {
     this.model.r_c.hset('fin_by_user', this.id, JSON.stringify(fin_hash));
     reso();
@@ -22,7 +24,7 @@ User.prototype.set_fin = (fin_hash) => {
 
 //mark a t3 as finished by this user.
 //returns the same thing as user.get_fin
-User.prototype.fin_t3 = (t3id, val) => {
+User.prototype.fin_t3 = function(t3id, val){
   if (val === undefined)
     val = true;
   return new Promise( (resolve,rej) => {
