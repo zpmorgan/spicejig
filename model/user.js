@@ -38,9 +38,9 @@ User.prototype.fin_t3 = function(t3id, val){
 };
 
 //return a random t3 that hasn't been fin'd by this user
-User.prototype.rand_unfinished_t3id = function(dims){
+User.prototype.rand_unfinished_t3id = function(dims, pool_name){
   return new Promise( (reso,rej)=>{
-    this.model.pools.default.weighted_t3_selektion(25, dims).then( t3ids => {
+    this.model.pools[pool_name].weighted_t3_selektion(25, dims).then( t3ids => {
       this.get_fin().then ( (fin) => {
         for (let t3id of t3ids){
           if (!fin[t3id]){
@@ -53,15 +53,17 @@ User.prototype.rand_unfinished_t3id = function(dims){
     }).catch(err => {rej(err + '.rand_t3id_fail')});
   });
 }
-User.prototype.rand_unfinished_t3 = function(dims){
+User.prototype.rand_unfinished_t3 = function(dims, pool_name){
+  if(!pool_name)
+    pool_name = 'default';
   return new Promise( (reso,rej)=>{
-    this.rand_unfinished_t3id(dims).then( t3id => {
+    this.rand_unfinished_t3id(dims, pool_name).then( t3id => {
       if (!t3id){
         console.log('no t3 found for dims:' + dims);
         rej('no t3 found for dims:' + dims);
         return;
       }
-      this.model.pools.default.t3_from_db (t3id)
+      this.model.pools[pool_name].t3_from_db (t3id)
         .then( t3 => { //return a promise.
           reso(t3);
         })

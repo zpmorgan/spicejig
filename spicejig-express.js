@@ -61,6 +61,8 @@ var spec_params = function(req,res,next){
     req.spec.pieces = req.query.pieces;
   if(req.query.perturbation)
     req.spec.perturbation = req.query.perturbation;
+  if(req.query.pool)
+    req.spec.pool = req.query.pool;
   next();
 };
 
@@ -82,7 +84,7 @@ app.get('/random',userify,spec_params, function(req, res) {
 });
 
 app.get('/t3/:t3id',userify,spec_params, function(req, res) {
-  let pool = Model.pools["default"];
+  let pool = Model.pools[req.query.pool || "default"];
   pool.t3_from_db(req.params.t3id).then(t3 => {
     req.spec.img_from = 'reddit';
     req.spec.t3 = t3;
@@ -95,7 +97,7 @@ app.get('/t3/:t3id',userify,spec_params, function(req, res) {
 });
 
 app.get('/t3data/:t3id', userify, (req,res) => {
-  let pool = Model.pools["default"];
+  let pool = Model.pools[req.query.pool || "default"];
   pool.t3_from_db(req.params.t3id).then(t3 => {
     //this somehow makes it pretty in the browser.
     res.set({'Content-Type': 'application/json; charset=utf-8'}).status(200).send(JSON.stringify(t3, undefined, ' '));
@@ -125,14 +127,15 @@ app.get('/overworld', userify, spec_params, (req,res) => {
 });
 
 app.get('/scrapereddit', function(req,res){
-  Model.pools.default.scrape().then(function(thing){
+  let pool = req.query.pool || 'default';
+  Model.pools[pool].scrape().then(function(thing){
     res.json(thing);
   });
 });
 
 app.get('/t3_img/:t3id', (req,res) => {
   //Model.stream_t3pic(req.params.t3id)
-  let pool = Model.pools["default"];
+  let pool = Model.pools[req.query.pool || "default"];
   pool.fspath_t3pic(req.params.t3id)
     .then( fspath => {
       res.setHeader("content-type", "image/jpeg");
@@ -151,7 +154,7 @@ app.get('/thumb/:t3id', userify, (req,res) => {
   let dims = [1.61,1];
   if (req.query.width && req.query.height)
     dims = [req.query.width, req.query.height];
-  let pool = Model.pools["default"];
+  let pool = Model.pools[req.query.pool || "default"];
   req.user.rand_unfinished_t3(dims).then( (tng) => {
     pool.fspath_t3thumb(tng.data.id).then( (fspath) => {
       res.setHeader("content-type", "image/jpeg");
@@ -171,7 +174,7 @@ app.get('/rand_puz_t3/', userify, function(req,res){
   if (req.query.width && req.query.height)
     dims = [req.query.width, req.query.height];
   var p = new Promise( (resolve,reject) => {
-    req.user.rand_unfinished_t3(dims).then( (tng) => {
+    req.user.rand_unfinished_t3(dims, req.query.pool).then( (tng) => {
       resolve(tng);
     }).catch( err=>{ reject(err + '.p3p3') });;
   }).then( (tng) => {

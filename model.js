@@ -20,6 +20,17 @@ var Model = function(){
     fs.mkdirSync(this.thumb_dir, 0o744);
 
   this.pools = {};
+  this.add_subreddit_pool( 'fakebuildings', {
+    ImaginaryCityscapes: {bias:1},
+    ImaginaryDwellings: {bias:1},
+    ImaginaryVillages: {bias:1},
+  });
+  this.add_subreddit_pool( 'fakewater', {
+    //ImaginaryLeviathans: {bias:1},
+    ImaginaryRivers: {bias:1},
+    ImaginaryLakes: {bias:1},
+    ImaginaryWaterfalls: {bias:1},
+  });
 };
 
 Model.prototype.select_db = async function(dbid){
