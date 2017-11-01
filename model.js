@@ -20,16 +20,26 @@ var Model = function(){
     fs.mkdirSync(this.thumb_dir, 0o744);
 
   this.pools = {};
+  this.add_subreddit_pool( 'faketrees', {
+    ImaginarySwamps: {bias:30},
+    ImaginaryForests: {bias:20},
+    ImaginaryTrees: {bias:20},
+    ImaginaryWildlands: {bias:8},
+  });
   this.add_subreddit_pool( 'fakebuildings', {
-    ImaginaryCityscapes: {bias:1},
-    ImaginaryDwellings: {bias:1},
-    ImaginaryVillages: {bias:1},
+    ImaginaryCityscapes: {bias:3},
+    ImaginaryDwellings: {bias:10},
+    ImaginaryVillages: {bias:13},
   });
   this.add_subreddit_pool( 'fakewater', {
     //ImaginaryLeviathans: {bias:1},
-    ImaginaryRivers: {bias:1},
-    ImaginaryLakes: {bias:1},
-    ImaginaryWaterfalls: {bias:1},
+    ImaginaryRivers: {bias:3},
+    ImaginaryLakes: {bias:3},
+    ImaginaryWaterfalls: {bias:3},
+    ImaginarySeascapes: {bias:2},
+  });
+  this.add_subreddit_pool( 'fakeportals', {
+    ImaginaryPortals: {bias:3},
   });
 };
 
