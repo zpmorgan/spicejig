@@ -98,6 +98,10 @@
       a.menu-option:active {
         /*vertical-align:-3px;*/
       }
+
+      .drag-over{
+        pointer-events:none;
+      }
     </style>
     <script> //global stuff G
       var G = {};
