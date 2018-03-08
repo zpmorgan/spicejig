@@ -199,6 +199,15 @@ app.get('/fin/:t3id', userify, (req,res) => {
   });
 });
 
+app.get('/robots.txt', function(req,res){
+  res.set('Content-Type', 'text/plain');
+  res.status(200);
+  res.send("\
+User-agent: *\n\
+Disallow: /\n"
+  );
+});
+
 /**
  *  * https://gist.github.com/hurjas/2660489
  *  * Return a timestamp with the format "m/d/yy h:MM:ss TT"
